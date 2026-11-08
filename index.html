@@ -1,0 +1,3578 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px/1.4 system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>이름 물고기 뜨개 인형</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@700;800&family=IBM+Plex+Sans+KR:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: 3D stage left (plush + yarn), workbench right: name → fish drawing → stitch map → controls. Bottom sheet on phones. */
+:root{
+  --stage:#e8ecef; --panel:#ffffff; --fg:#1c2027; --muted:#5b6472; --line:#d9dde3;
+  --accent:#2f7d86; --accent-ink:#ffffff; --chip:#f1f4f5; --ink:#24303a;
+  --f-display:"Nanum Myeongjo", "Noto Serif KR", Georgia, serif;
+  --f-body:"IBM Plex Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+  --f-mono:"IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --stage:#10161a; --panel:#161d22; --fg:#e6e9e4; --muted:#8d989f; --line:#26313a;
+  --accent:#6cc3c9; --accent-ink:#0d1a1c; --chip:#1d262c; --ink:#d9e2e4; color-scheme:dark }}
+:root[data-theme="dark"]{
+  --stage:#10161a; --panel:#161d22; --fg:#e6e9e4; --muted:#8d989f; --line:#26313a;
+  --accent:#6cc3c9; --accent-ink:#0d1a1c; --chip:#1d262c; --ink:#d9e2e4; color-scheme:dark }
+
+html,body{height:100%}
+body{background:var(--stage);color:var(--fg);font-family:var(--f-body);font-size:14px;overflow:hidden}
+.app{height:100%;display:grid;grid-template-columns:minmax(0,1fr) 360px}
+.stage{position:relative;min-width:0;min-height:0}
+#c{display:block;width:100%;height:100%;touch-action:none}
+.hud{position:absolute;top:max(16px,env(safe-area-inset-top,0px));left:max(16px,env(safe-area-inset-left,0px));display:grid;gap:4px;pointer-events:none;max-width:calc(100% - 32px)}
+.hud .eyebrow{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.hud h1{font-family:var(--f-display);font-weight:800;font-size:34px;letter-spacing:-.01em;margin:0;line-height:1.15;text-wrap:balance;overflow-wrap:anywhere}
+.phase{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.phase span{font-size:12px;padding:3px 9px;border-radius:999px;border:1px solid var(--line);color:var(--muted);background:color-mix(in srgb,var(--stage) 70%,transparent)}
+.phase span.on{border-color:var(--accent);color:var(--accent);font-weight:600}
+.phase span.ok{color:var(--fg)}
+.read{display:flex;flex-wrap:wrap;gap:4px 14px;font-family:var(--f-mono);font-size:12px;font-variant-numeric:tabular-nums;margin-top:4px;color:var(--muted)}
+.read b{font-weight:500;color:var(--fg)}
+
+.panel{background:var(--panel);border-left:1px solid var(--line);overflow-y:auto;padding-block:18px 28px;padding-left:18px;padding-right:max(18px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:16px}
+.namebar{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px}
+.namebar input{font:inherit;font-size:16px;padding:9px 11px;border:1px solid var(--line);border-radius:8px;background:var(--chip);color:var(--fg);min-width:0}
+button{font:inherit;font-weight:500;border:1px solid var(--line);background:var(--chip);color:var(--fg);border-radius:8px;padding:9px 10px;cursor:pointer}
+button:hover{border-color:var(--muted)}
+button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.linkbtn{background:none;border:0;padding:0;color:var(--accent);font-size:12.5px;justify-self:start}
+.drawing{border:1px solid var(--line);border-radius:10px;background:var(--chip);padding:10px;display:grid;gap:8px}
+.drawing svg{width:100%;height:auto;display:block}
+.drawing svg path{fill:none;stroke:var(--ink);stroke-width:.9;stroke-linecap:round;stroke-linejoin:round}
+.drawing .cap{display:flex;justify-content:space-between;gap:8px;font-size:12px;color:var(--muted);flex-wrap:wrap}
+.drawing .cap i{font-family:var(--f-display);font-style:normal;font-weight:700;color:var(--fg);font-size:13px}
+.transport{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.group{display:grid;gap:12px;padding-top:14px;border-top:1px solid var(--line)}
+.group h2{margin:0;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.row{display:grid;grid-template-columns:86px minmax(0,1fr) 48px;align-items:center;gap:10px}
+.row label{font-size:13px}
+.row output{font-family:var(--f-mono);font-size:12px;text-align:right;font-variant-numeric:tabular-nums;color:var(--muted)}
+input[type=range]{width:100%;accent-color:var(--accent)}
+.colors{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.colors label{display:flex;gap:6px;align-items:center;font-size:13px}
+input[type=color]{width:32px;height:24px;border:1px solid var(--line);border-radius:6px;background:none;padding:0;cursor:pointer}
+.check{display:flex;gap:8px;align-items:center;font-size:13px}
+#chart{width:100%;max-width:100%;height:auto;border-radius:6px;border:1px solid var(--line);background:var(--panel);image-rendering:pixelated}
+.note{font-size:12px;color:var(--muted);line-height:1.6;margin:0}
+.note a{color:var(--accent)}
+details summary{cursor:pointer;font-size:12.5px}
+.stage.sea .hud h1{color:#ffffff;text-shadow:0 1px 12px rgba(0,30,45,.5)}
+.stage.sea .hud .eyebrow,.stage.sea .read{color:#c4e7ee}
+.stage.sea .read b{color:#ffffff}
+.stage.sea .phase span{color:#d9f0f4;border-color:rgba(255,255,255,.35);background:rgba(4,40,55,.45)}
+.stage.sea .phase span.on{color:#ffffff;border-color:#9fe6ee;background:rgba(20,110,130,.6)}
+.stage.sea .phase span.ok{color:#ffffff}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips button{padding:6px 10px;font-size:12.5px;border-radius:999px}
+.chips button[aria-pressed="true"]{border-color:var(--accent);color:var(--accent);font-weight:600}
+.wide{width:100%}
+.zoom{position:absolute;right:max(14px,env(safe-area-inset-right,0px));bottom:max(14px,env(safe-area-inset-bottom,0px));display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;max-width:calc(100% - 28px)}
+.zoom button{background:color-mix(in srgb,var(--panel) 82%,transparent);backdrop-filter:blur(6px);min-width:42px}
+.pattern{position:absolute;inset:0;background:var(--panel);overflow:auto;padding-block:0 40px;padding-left:max(20px,env(safe-area-inset-left,0px));padding-right:max(20px,env(safe-area-inset-right,0px));z-index:5}
+.pattern .ptop{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;position:sticky;top:0;background:var(--panel);padding-block:14px 10px;z-index:2;border-bottom:1px solid var(--line)}
+.pattern .ptop .btns{display:flex;gap:8px;flex-wrap:wrap}
+.pattern h2.pt{font-family:var(--f-display);font-size:24px;margin:0;text-wrap:balance}
+.pattern .pmeta{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px 18px;margin:16px 0;font-size:13px;line-height:1.5}
+.pattern .pmeta b{display:block;font-size:11px;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;font-weight:600;margin-bottom:2px}
+.pattern h3{font-size:15px;margin:24px 0 8px}
+.pattern p,.pattern li{max-width:74ch}
+.chartwrap{overflow-x:auto;border:1px solid var(--line);border-radius:8px;background:var(--chip);padding:8px}
+#pChart{display:block}
+.legend{display:flex;flex-wrap:wrap;gap:8px 16px;font-size:12.5px;margin-top:10px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:16px;height:13px;border:1px solid var(--line);display:inline-grid;place-items:center;font-style:normal;font-size:10px;color:var(--fg);background:var(--panel)}
+.piece{border-top:1px solid var(--line);padding-top:10px;margin-top:12px}
+.piece h4{margin:0 0 6px;font-size:14px}
+.piece p{margin:4px 0;font-size:13px;line-height:1.6}
+.rows{list-style:none;margin:6px 0;padding:0;display:grid;gap:4px}
+.rows li{font-size:12.5px;line-height:1.55;display:grid;grid-template-columns:110px minmax(0,1fr);gap:8px}
+.rows li b{font-family:var(--f-mono);font-weight:500;font-variant-numeric:tabular-nums}
+.rows .sh{color:var(--accent)}
+.sw{display:inline-block;width:9px;height:9px;border-radius:2px;margin:0 2px 0 6px;border:1px solid rgba(0,0,0,.25)}
+.badge{display:inline-block;font-size:12px;padding:2px 9px;border-radius:999px;border:1px solid var(--accent);color:var(--accent)}
+.badge.warn{border-color:#c2412d;color:#c2412d}
+ol.steps{padding-left:20px;font-size:13px;line-height:1.75}
+.sheet-toggle{display:none}
+@media (max-width:820px){
+  .app{grid-template-columns:1fr;grid-template-rows:minmax(0,1fr) auto}
+  .panel{border-left:0;border-top:1px solid var(--line);max-height:52vh;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:14px max(20px,env(safe-area-inset-bottom,0px))}
+  .panel.collapsed .collapsible{display:none}
+  .sheet-toggle{display:block}
+  .hud h1{font-size:24px}
+  .rows li{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="stage">
+    <canvas id="c" aria-label="물고기 뜨개 인형 3D 뷰"></canvas>
+    <div class="hud">
+      <div class="eyebrow">이름으로 태어난 물고기</div>
+      <h1 id="hName">준우</h1>
+      <div class="phase" id="phase">
+        <span data-p="front">앞판 뜨기</span><span data-p="back">뒤판 뜨기</span><span data-p="sew">맞대고 꿰매기</span><span data-p="stuff">솜 넣기</span><span data-p="done">완성</span>
+      </div>
+      <div class="read">
+        <span>코 <b id="rSt">0</b>/<b id="rStT">0</b></span>
+        <span>실 <b id="rYarn">0.0</b> m</span>
+        <span>크기 <b id="rSize">-</b></span>
+      </div>
+    </div>
+    <div class="zoom">
+      <button id="zIn" aria-label="확대">＋</button><button id="zOut" aria-label="축소">－</button>
+      <button id="zClose">재질 가까이</button><button id="zFit">전체 보기</button>
+    </div>
+    <section class="pattern" id="pattern" hidden aria-label="뜨개 도안"></section>
+  </div>
+
+  <aside class="panel" id="panel">
+    <div class="namebar">
+      <input id="name" type="text" value="준우" maxlength="40" aria-label="물고기 이름" autocomplete="off">
+      <button class="primary" id="bMake">만들기</button>
+    </div>
+    <button class="linkbtn" id="bRandom">라틴어 학명으로 아무거나</button>
+
+    <div class="drawing">
+      <svg id="fishSvg" viewBox="0 0 500 300" role="img" aria-label="fishdraw가 그린 물고기"></svg>
+      <div class="cap"><i id="capName">준우</i><span id="capInfo">fishdraw</span></div>
+    </div>
+
+    <div class="transport">
+      <button class="primary" id="bPlay">일시정지</button>
+      <button id="bSkip">바로 완성</button>
+      <button id="bRestart">처음부터</button>
+    </div>
+    <div class="row"><label for="progress">뜨기 진행</label><input type="range" id="progress" min="0" max="1000" value="0"><output id="oProgress">0%</output></div>
+    <div class="row"><label for="speed">속도</label><input type="range" id="speed" min="2" max="160" step="1" value="40"><output id="oSpeed"></output></div>
+    <button class="primary wide" id="bPattern">뜨개 도안 보기</button>
+    <button class="sheet-toggle" id="bSheet">설정 펼치기</button>
+
+    <div class="collapsible group">
+      <h2>배경</h2>
+      <div class="chips" id="envChips"><button data-v="sea" aria-pressed="true">바닷속</button><button data-v="studio" aria-pressed="false">스튜디오</button></div>
+      <div class="row"><label for="caustic">물빛 일렁임</label><input type="range" id="caustic" min="0" max="2" step="0.05" value="1"><output id="oCaustic"></output></div>
+    </div>
+
+    <div class="collapsible group">
+      <h2>실 재질</h2>
+      <div class="chips" id="matChips">
+        <button data-v="fur" aria-pressed="true">복실 퍼얀</button><button data-v="mohair" aria-pressed="false">모헤어</button>
+        <button data-v="chenille" aria-pressed="false">셔닐 벨벳</button><button data-v="boucle" aria-pressed="false">부클레</button>
+        <button data-v="wool" aria-pressed="false">울</button><button data-v="cotton" aria-pressed="false">면사</button>
+      </div>
+      <div class="row"><label for="fur">털 길이</label><input type="range" id="fur" min="0" max="0.4" step="0.01" value="0.18"><output id="oFur"></output></div>
+      <div class="row"><label for="dens">털 밀도</label><input type="range" id="dens" min="4" max="30" step="1" value="14"><output id="oDens"></output></div>
+      <div class="row"><label for="droop">털 처짐</label><input type="range" id="droop" min="0" max="1" step="0.05" value="0.35"><output id="oDroop"></output></div>
+      <div class="row"><label for="yarn">실 굵기</label><input type="range" id="yarn" min="0.1" max="0.26" step="0.005" value="0.18"><output id="oYarn"></output></div>
+      <div class="row"><label for="sheen">광택</label><input type="range" id="sheen" min="0" max="1.2" step="0.02" value="0.2"><output id="oSheen"></output></div>
+      <div class="row"><label for="lumpy">울퉁불퉁</label><input type="range" id="lumpy" min="0" max="0.16" step="0.005" value="0"><output id="oLumpy"></output></div>
+    </div>
+
+    <div class="collapsible group">
+      <h2>인형</h2>
+      <div class="row"><label for="stitches">가로 코 수</label><input type="range" id="stitches" min="24" max="60" step="1" value="40"><output id="oStitches"></output></div>
+      <div class="row"><label for="puff">솜 양</label><input type="range" id="puff" min="0.2" max="1.6" step="0.05" value="1"><output id="oPuff"></output></div>
+      <div class="colors">
+        <label>몸통 <input type="color" id="c0"></label>
+        <label>무늬 <input type="color" id="c1"></label>
+        <label>지느러미 <input type="color" id="c2"></label>
+      </div>
+      <button class="linkbtn" id="bPalette">이름 색으로 되돌리기</button>
+      <canvas id="chart" width="320" height="200" aria-label="코 배치도"></canvas>
+      <p class="note">칸 하나가 한 코입니다. 앞판과 뒤판을 같은 배치로 뜬 뒤 맞대고 솜을 넣습니다.</p>
+    </div>
+
+    <div class="collapsible group">
+      <h2>실 물리 (코세라 막대)</h2>
+      <div class="row"><label for="tension">장력</label><input type="range" id="tension" min="0.02" max="0.6" step="0.01" value="0.18"><output id="oTension"></output></div>
+      <div class="row"><label for="gravity">중력</label><input type="range" id="gravity" min="0" max="40" step="0.5" value="12"><output id="oGravity"></output></div>
+      <div class="row"><label for="wind">바람</label><input type="range" id="wind" min="0" max="30" step="0.5" value="0"><output id="oWind"></output></div>
+      <label class="check"><input type="checkbox" id="autoRotate" checked> 완성되면 천천히 돌리기</label>
+    </div>
+
+    <div class="collapsible group">
+      <details>
+        <summary>만드는 방식과 출처</summary>
+        <p class="note">이름을 시드로 fishdraw가 물고기 선화를 그립니다. 선화를 칠해 실루엣을 만들고, 선이 촘촘한 곳은 무늬색, 얇은 지느러미는 지느러미색 코로 나눕니다. 실 한 가닥을 PyElastica 방식의 코세라 막대(노드·요소, 신장·굽힘 제약, Verlet 적분, 비틀림 생략)로 시뮬레이션해 앞판과 뒤판을 뜨고, 뒤판을 뒤집어 맞댄 뒤 실루엣 안쪽까지의 거리만큼 부풀려 솜을 넣습니다. 털은 실 표면 위로 겹겹이 쌓은 셸로 표현했습니다.</p>
+        <p class="note">물고기: <a href="https://github.com/LingDong-/fishdraw/tree/a514372de1d05b4aa32a9e35aadec9a5299689a2" target="_blank" rel="noopener">fishdraw</a> · 원작 Lingdong Huang · MIT (<a href="https://github.com/LingDong-/fishdraw/blob/a514372de1d05b4aa32a9e35aadec9a5299689a2/LICENSE" target="_blank" rel="noopener">LICENSE</a>) · 실행·영상 Xity<br>실: <a href="https://github.com/GazzolaLab/PyElastica/tree/0688eb4f0d6091288a38367fcea4ac0c57fb0f96" target="_blank" rel="noopener">PyElastica</a> · MIT · Copyright (c) 2019–2026 GazzolaLab (<a href="https://github.com/GazzolaLab/PyElastica/blob/0688eb4f0d6091288a38367fcea4ac0c57fb0f96/LICENSE" target="_blank" rel="noopener">LICENSE</a>) · 이론 <a href="https://www.cosseratrods.org/" target="_blank" rel="noopener">cosseratrods.org</a></p>
+      </details>
+    </div>
+  </aside>
+</div>
+
+<script>
+/* fishdraw by Lingdong Huang — https://github.com/LingDong-/fishdraw (commit a514372)
+   MIT License, Copyright (c) 2021 Lingdong Huang. Permission is hereby granted, free of charge, to any person obtaining a copy
+   of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including
+   without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software,
+   and to permit persons to whom the Software is furnished to do so, subject to the following conditions: The above copyright notice
+   and this permission notice shall be included in all copies or substantial portions of the Software. THE SOFTWARE IS PROVIDED "AS IS",
+   WITHOUT WARRANTY OF ANY KIND. Modified: exposes the eye position; seeded per name with a fresh noise table. */
+var __fd_eye=null;
+
+let jsr = 0x5EED;
+let {PI} = Math;
+function rand(){
+  jsr^=(jsr<<17);
+  jsr^=(jsr>>13);
+  jsr^=(jsr<<5);
+  return (jsr>>>0)/4294967295;
+}
+
+var PERLIN_YWRAPB = 4; var PERLIN_YWRAP = 1<<PERLIN_YWRAPB;
+var PERLIN_ZWRAPB = 8; var PERLIN_ZWRAP = 1<<PERLIN_ZWRAPB;
+var PERLIN_SIZE = 4095;
+var perlin_octaves = 4;var perlin_amp_falloff = 0.5;
+var scaled_cosine = function(i) {return 0.5*(1.0-Math.cos(i*PI));};
+var perlin;
+let noise = function(x,y,z) {
+  y = y || 0; z = z || 0;
+  if (perlin == null) {
+    perlin = new Array(PERLIN_SIZE + 1);
+    for (var i = 0; i < PERLIN_SIZE + 1; i++) {
+      perlin[i] = rand();
+    }
+  }
+  if (x<0) { x=-x; } if (y<0) { y=-y; } if (z<0) { z=-z; }
+  var xi=Math.floor(x), yi=Math.floor(y), zi=Math.floor(z);
+  var xf = x - xi; var yf = y - yi; var zf = z - zi;
+  var rxf, ryf;
+  var r=0; var ampl=0.5;
+  var n1,n2,n3;
+  for (var o=0; o<perlin_octaves; o++) {
+    var of=xi+(yi<<PERLIN_YWRAPB)+(zi<<PERLIN_ZWRAPB);
+    rxf = scaled_cosine(xf); ryf = scaled_cosine(yf);
+    n1  = perlin[of&PERLIN_SIZE];
+    n1 += rxf*(perlin[(of+1)&PERLIN_SIZE]-n1);
+    n2  = perlin[(of+PERLIN_YWRAP)&PERLIN_SIZE];
+    n2 += rxf*(perlin[(of+PERLIN_YWRAP+1)&PERLIN_SIZE]-n2);
+    n1 += ryf*(n2-n1);
+    of += PERLIN_ZWRAP;
+    n2  = perlin[of&PERLIN_SIZE];
+    n2 += rxf*(perlin[(of+1)&PERLIN_SIZE]-n2);
+    n3  = perlin[(of+PERLIN_YWRAP)&PERLIN_SIZE];
+    n3 += rxf*(perlin[(of+PERLIN_YWRAP+1)&PERLIN_SIZE]-n3);
+    n2 += ryf*(n3-n2);
+    n1 += scaled_cosine(zf)*(n2-n1);
+    r += n1*ampl;
+    ampl *= perlin_amp_falloff;
+    xi<<=1; xf*=2; yi<<=1; yf*=2; zi<<=1; zf*=2;
+    if (xf>=1.0) { xi++; xf--; }
+    if (yf>=1.0) { yi++; yf--; }
+    if (zf>=1.0) { zi++; zf--; }
+  }
+  return r;
+};
+
+function dist(x0,y0,x1,y1){
+  return Math.hypot(x1-x0,y1-y0);
+}
+function lerp(a,b,t){
+  return a * (1-t) + b * t;
+}
+function lerp2d(x0,y0,x1,y1,t){
+  return [
+    x0*(1-t) + x1*t,
+    y0*(1-t) + y1*t,
+  ]
+}
+function get_bbox(points){
+  let xmin = Infinity;
+  let ymin = Infinity;
+  let xmax = -Infinity;
+  let ymax = -Infinity
+  for (let i = 0;i < points.length; i++){
+    let [x,y] = points[i];
+    xmin = Math.min(xmin,x);
+    ymin = Math.min(ymin,y);
+    xmax = Math.max(xmax,x);
+    ymax = Math.max(ymax,y);
+  }
+  return {x:xmin,y:ymin,w:xmax-xmin,h:ymax-ymin};
+}
+
+function seg_isect(p0x, p0y, p1x, p1y, q0x, q0y, q1x, q1y, is_ray = false) {
+  let d0x = p1x - p0x;
+  let d0y = p1y - p0y;
+  let d1x = q1x - q0x;
+  let d1y = q1y - q0y;
+  let vc = d0x * d1y - d0y * d1x;
+  if (vc == 0) {
+    return null;
+  }
+  let vcn = vc * vc;
+  let q0x_p0x = q0x - p0x;
+  let q0y_p0y = q0y - p0y;
+  let vc_vcn = vc / vcn;
+  let t = (q0x_p0x * d1y - q0y_p0y * d1x) * vc_vcn;
+  let s = (q0x_p0x * d0y - q0y_p0y * d0x) * vc_vcn;
+  if (0 <= t && (is_ray || t < 1) && 0 <= s && s < 1) {
+    let ret = {t, s, side: null, other: null, xy: null};
+    ret.xy = [p1x * t + p0x * (1 - t), p1y * t + p0y * (1 - t)];
+    ret.side = pt_in_pl(p0x, p0y, p1x, p1y, q0x, q0y) < 0 ? 1 : -1;
+    return ret;
+  }
+  return null;
+}
+function pt_in_pl(x, y, x0, y0, x1, y1) {
+  let dx = x1 - x0;
+  let dy = y1 - y0;
+  let e = (x - x0) * dy - (y - y0) * dx;
+  return e;
+}
+
+function poly_bridge(poly0,poly1){
+  let dmin = Infinity;
+  let imin = null;
+  for (let i = 0; i < poly0.length; i++){
+    for (let j = 0; j < poly1.length; j++){
+      let [x0,y0] = poly0[i];
+      let [x1,y1] = poly1[j];
+      let dx = x0-x1;
+      let dy = y0-y1;
+      let d2 = dx*dx + dy*dy;
+      if (d2 < dmin){
+        dmin = d2;
+        imin = [i,j];
+      }
+    }
+  }
+  let u = poly0.slice(0,imin[0]).concat(
+    poly1.slice(imin[1])).concat(
+      poly1.slice(0,imin[1])).concat(
+        poly0.slice(imin[0]));
+  return u;
+}
+
+function poly_union(poly0,poly1,self_isect=false){
+  let verts0 = poly0.map(xy=>({xy, isects: [], isects_map: {}}));
+  let verts1 = poly1.map(xy=>({xy, isects: [], isects_map: {}}));
+
+  function pair_key() {
+    return Array.from(arguments).join(',');
+  }
+
+  let has_isect = false;
+
+  function build_vertices(poly,other,out,oout,idx){
+    let n = poly.length;
+    let m = other.length;
+    if (self_isect){
+      for (let i = 0; i < n; i++) {
+        let id = pair_key(idx,i);
+        let p = out[i];
+        let i1 = (i + 1 + n) % n;
+        let a = poly[i];
+        let b = poly[i1];
+        for (let j = 0; j < n; j++) {
+          let jd = pair_key(idx,j);
+          let j1 = (j + 1 + n) % n;
+          if (i == j || i == j1 || i1 == j || i1 == j1) {
+            continue;
+          }
+          let c = poly[j];
+          let d = poly[j1];
+          let xx;
+          let ox = out[j].isects_map[id];
+          if (ox) {
+            xx = {
+              t: ox.s,
+              s: ox.t,
+              xy: ox.xy,
+              other: null,
+              side: pt_in_pl(...a, ...b, ...c) < 0 ? 1 : -1
+            };
+          }else{
+            xx = seg_isect(...a, ...b, ...c, ...d);
+          }
+          if (xx) {
+            xx.other = j;
+            xx.jump = false;
+            p.isects.push(xx);
+            p.isects_map[jd] = xx;
+          }
+        }
+        
+      }
+    }
+
+    for (let i = 0; i < n; i++) {
+      let id = pair_key(idx,i);
+      let p = out[i];
+      let i1 = (i + 1 + n) % n;
+      let a = poly[i];
+      let b = poly[i1];
+      for (let j = 0; j < m; j++) {
+        let jd = pair_key(1-idx,j);
+        let j1 = (j + 1 + m) % m;
+        let c = other[j];
+        let d = other[j1];
+        let xx;
+
+        let ox = oout[j].isects_map[id];
+        if (ox) {
+          xx = {
+            t: ox.s,
+            s: ox.t,
+            xy: ox.xy,
+            other: null,
+            side: pt_in_pl(...a, ...b, ...c) < 0 ? 1 : -1
+          };
+        } else {
+          xx = seg_isect(...a, ...b, ...c, ...d);
+        }
+        if (xx) {
+          has_isect = true;
+          xx.other = j;
+          xx.jump = true;
+          p.isects.push(xx);
+          p.isects_map[jd] = xx;
+        }
+      }
+      p.isects.sort((a2, b2) => a2.t - b2.t);
+    }
+  }
+  build_vertices(poly0,poly1,verts0,verts1,0);
+  build_vertices(poly1,poly0,verts1,verts0,1);
+  
+  if (!has_isect){
+    if (!self_isect){
+      return poly_bridge(poly0,poly1);
+    }else{
+      return poly_union(poly_bridge(poly0,poly1),[],true);
+    }
+  }
+
+
+  let isect_mir = {};
+  function mirror_isects(verts0,verts1,idx) {
+    let n = verts0.length;
+    for (let i = 0; i < n; i++) {
+      for (let j = 0; j < verts0[i].isects.length; j++) {
+        let id = pair_key(idx, i, j);
+        let {jump} = verts0[i].isects[j];
+        let jd = jump?(1-idx):idx;
+        let k = verts0[i].isects[j].other;
+        let z = (jump?verts1:verts0)[k].isects.findIndex((x) => (x.jump == jump && x.other == i));
+        isect_mir[id] = [jd, k, z];
+      }
+    }
+  }
+  mirror_isects(verts0,verts1,0);
+  mirror_isects(verts1,verts0,1);
+
+  // console.log(verts0,verts1)
+
+  function trace_outline(idx, i0, j0, dir) {
+    let zero = null;
+    let out = [];
+    function trace_from(idx, i0, j0, dir) {
+      if (zero == null) {
+        zero = [idx, i0, j0];
+      } else if (idx == zero[0] && i0 == zero[1] && j0 == zero[2]) {
+        return true;
+      }
+      let verts = idx?verts1:verts0;
+      let n = verts.length;
+      let p = verts[i0];
+      let i1 = (i0 + dir + n) % n;
+      if (j0 == -1) {
+        out.push(p.xy);
+        if (dir < 0) {
+          return trace_from(idx,i1, verts[i1].isects.length - 1, dir);
+        } else if (!verts[i0].isects.length) {
+          return trace_from(idx, i1, -1, dir, [i0, j0]);
+        } else {
+          return trace_from(idx, i0, 0, dir, [i0, j0]);
+        }
+      } else if (j0 >= p.isects.length) {
+        return trace_from(idx, i1, -1, dir, [i0, j0]);
+      } else {
+        let id = pair_key(idx, i0, j0);
+        out.push(p.isects[j0].xy);
+
+        let q = p.isects[j0];
+        let [jdx, k, z] = isect_mir[id];
+        let params;
+        if (q.side * dir < 0) {
+          params = [jdx, k, z - 1, -1];
+        } else {
+          params = [jdx, k, z + 1, 1];
+        }
+        return trace_from(...params);
+      }
+    }
+    let success = trace_from(idx, i0, j0, dir);
+    if (!success || out.length < 3) {
+      return null;
+    }
+    return out;
+  }
+
+  let xmin = Infinity;
+  let amin = null;
+  for (let i = 0; i < poly0.length; i++) {
+    if (poly0[i][0] < xmin) {
+      xmin = poly0[i][0];
+      amin = [0,i];
+    }
+  }
+  for (let i = 0; i < poly1.length; i++) {
+    if (poly1[i][0] < xmin) {
+      xmin = poly1[i][0];
+      amin = [1,i];
+    }
+  }
+
+  function check_concavity(poly, idx) {
+    let n = poly.length;
+    let a = poly[(idx - 1 + n) % n];
+    let b = poly[idx];
+    let c = poly[(idx + 1) % n];
+    let cw = pt_in_pl(...a, ...b, ...c) < 0 ? 1 : -1;
+    return cw;
+  }
+
+  let cw = check_concavity(amin[0]?poly1:poly0, amin[1]);
+  let ret = trace_outline(...amin, -1, cw, true);
+  if (!ret) {
+    return [];
+  }
+  return ret;
+}
+
+function seg_isect_poly(x0,y0,x1,y1,poly,is_ray=false){
+  let n = poly.length;
+  let isects = [];
+  for (let i = 0; i < poly.length; i++){
+    let a = poly[i];
+    let b = poly[(i+1)%n];
+    let xx = seg_isect(x0,y0,x1,y1,...a,...b,is_ray);
+    if (xx){
+      isects.push(xx);
+    }
+  }
+  isects.sort((a,b)=>a.t-b.t);
+  return isects;
+}
+
+
+function clip(polyline,polygon){
+  if (!polyline.length){
+    return {true:[],false:[]};
+  }
+  let zero = seg_isect_poly(...polyline[0],polyline[0][0]+Math.E,polyline[0][1]+PI,polygon,true).length % 2 != 0;
+  let out = {
+    'true' :[[]],
+    'false':[[]],
+  }
+  let io = zero;
+  for (let i = 0; i < polyline.length; i++){
+    let a= polyline[i];
+    let b= polyline[i+1];
+    out[io][out[io].length-1].push(a);
+    if (!b) break;
+
+    let isects = seg_isect_poly(...a,...b,polygon,false);
+    for (let j = 0; j < isects.length; j++){
+      out[io][out[io].length-1].push(isects[j].xy);
+      io = !io;
+      out[io].push([isects[j].xy]);
+    }
+  }
+  out.true = out.true.filter(x=>x.length);
+  out.false = out.false.filter(x=>x.length);
+  return out;
+}
+
+function clip_multi(polylines,polygon,clipper_func=clip){
+  let out = {
+    true:[],
+    false:[],
+  };
+  for (let i = 0; i < polylines.length; i++){
+    let c = clipper_func(polylines[i],polygon);
+    out.true.push(...c.true);
+    out.false.push(...c.false); 
+  }
+  return out;
+}
+
+function binclip(polyline,func){
+  if (!polyline.length){
+    return {true:[],false:[]};
+  }
+  let bins = [];
+  for (let i = 0; i < polyline.length; i++){
+    let t = i/(polyline.length-1);
+    bins.push(func(...polyline[i],t));
+  }
+  let zero = bins[0];
+  let out = {
+    'true' :[[]],
+    'false':[[]],
+  }
+  let io = zero;
+  for (let i = 0; i < polyline.length; i++){
+    let a= polyline[i];
+    let b= polyline[i+1];
+    out[io][out[io].length-1].push(a);
+    if (!b) break;
+
+    let do_isect = bins[i] != bins[i+1];
+
+    if (do_isect){
+      let pt = lerp2d(...a,...b,0.5);
+      out[io][out[io].length-1].push(pt);
+      io = !io;
+      out[io].push([pt]);
+    }
+  }
+  out.true = out.true.filter(x=>x.length);
+  out.false = out.false.filter(x=>x.length);
+  return out;
+}
+
+
+function shade_shape(poly,step=5,dx=10,dy=20){
+  let bbox = get_bbox(poly);
+  bbox.x -= step;
+  bbox.y -= step;
+  bbox.w += step*2;
+  bbox.h += step*2;
+  let lines = [];
+  for (let i = -bbox.h; i < bbox.w; i+=step){
+    let x0 = bbox.x + i;
+    let y0 = bbox.y;
+    let x1 = bbox.x + i + bbox.h;
+    let y1 = bbox.y + bbox.h;
+    lines.push([[x0,y0],[x1,y1]]);
+  }
+  lines = clip_multi(lines,poly).true;
+
+  let carve = trsl_poly(poly,-dx,-dy);
+
+  lines = clip_multi(lines,carve).false;
+
+  for (let i = 0; i < lines.length; i++){
+    let [a,b] = lines[i];
+    let s = rand()*0.5;
+    if (dy > 0){
+      a = lerp2d(...a,...b,s);
+      lines[i][0] = a;
+    }else{
+      b = lerp2d(...b,...a,s);
+      lines[i][1] = b;
+    }
+  }
+
+  return lines;
+}
+
+
+function fill_shape(poly,step=5){
+  let bbox = get_bbox(poly);
+  bbox.x -= step;
+  bbox.y -= step;
+  bbox.w += step*2;
+  bbox.h += step*2;
+  let lines = [];
+  for (let i = 0; i < bbox.w+bbox.h/2; i+=step){
+    let x0 = bbox.x + i;
+    let y0 = bbox.y;
+    let x1 = bbox.x + i - bbox.h/2;
+    let y1 = bbox.y + bbox.h;
+    lines.push([[x0,y0],[x1,y1]]);
+  }
+  lines = clip_multi(lines,poly).true;
+  return lines;
+}
+
+function patternshade_shape(poly,step=5,pattern_func){
+  let bbox = get_bbox(poly);
+  bbox.x -= step;
+  bbox.y -= step;
+  bbox.w += step*2;
+  bbox.h += step*2;
+  let lines = [];
+  for (let i = -bbox.h/2; i < bbox.w; i+=step){
+    let x0 = bbox.x + i;
+    let y0 = bbox.y;
+    let x1 = bbox.x + i + bbox.h/2;
+    let y1 = bbox.y + bbox.h;
+    lines.push([[x0,y0],[x1,y1]]);
+  }
+  lines = clip_multi(lines,poly).true;
+
+  for (let i = 0; i < lines.length; i++){
+    lines[i] = resample(lines[i],2);
+  }
+
+  lines = clip_multi(lines,pattern_func,binclip).true;
+
+  return lines;
+}
+
+
+function vein_shape(poly,n=50){
+  let bbox = get_bbox(poly);
+  let out = [];
+  for (let i = 0; i < n; i++){
+    let x = bbox.x + rand()*bbox.w;
+    let y = bbox.y + rand()*bbox.h;
+    let o = [[x,y]];
+    for (let j = 0; j < 15; j++){
+      let dx = (noise(x*0.1,y*0.1,7)-0.5)*4;
+      let dy = (noise(x*0.1,y*0.1,6)-0.5)*4;
+      x += dx;
+      y += dy;
+      o.push([x,y]);
+    }
+    out.push(o);
+  }
+  out = clip_multi(out,poly).true;
+  return out;
+}
+
+function smalldot_shape(poly,scale=1){
+  let samples = [];
+  let bbox = get_bbox(poly);
+  poissondisk(bbox.w,bbox.h,5*scale,samples);
+  for (let i = 0; i < samples.length; i++){
+    samples[i][0] += bbox.x;
+    samples[i][1] += bbox.y;
+  }
+  let out = [];
+  let n = 7;
+  for (let i = 0; i < samples.length; i++){
+    let [x,y] =samples[i]
+    let t = (y > 0) ? (y/300) : 0.5;
+    // console.log(y,t);
+    if ((t > 0.4 || y < 0) && t > rand()){
+      continue;
+    }
+    for (let k = 0; k < 2; k++){
+      let o = [];
+      for (let j = 0; j < n; j++){
+        let t = j/(n-1);
+        let a = t * PI * 2;
+        o.push([
+          Math.cos(a)*1-k*0.3,
+          Math.sin(a)*0.5-k*0.3,
+        ])
+      }
+      o = trsl_poly(rot_poly(o,rand()*PI*2),x,y);
+      out.push(o);
+    }
+    
+  }
+  return clip_multi(out,poly).true;
+}
+
+function isect_circ_line(cx,cy,r,x0,y0,x1,y1){
+  //https://stackoverflow.com/a/1084899
+  let dx = x1-x0;
+  let dy = y1-y0;
+  let fx = x0-cx;
+  let fy = y0-cy;
+  let a = dx*dx+dy*dy;
+  let b = 2*(fx*dx+fy*dy);
+  let c = (fx*fx+fy*fy)-r*r;
+  let discriminant = b*b-4*a*c;
+  if (discriminant<0){
+    return null;
+  }
+  discriminant = Math.sqrt(discriminant);
+  let t0 = (-b - discriminant)/(2*a);
+  if (0 <= t0 && t0 <= 1){
+    return t0;
+  }
+  let t = (-b + discriminant)/(2*a);
+  if (t > 1 || t < 0){
+    return null;
+  }
+  return t;
+}
+
+function resample(polyline,step){
+  if (polyline.length < 2){
+    return polyline.slice();
+  }
+  polyline = polyline.slice();
+  let out = [polyline[0].slice()];
+  let next = null;
+  let i = 0;
+  while(i < polyline.length-1){
+    let a = polyline[i];
+    let b = polyline[i+1];
+    let dx = b[0]-a[0];
+    let dy = b[1]-a[1];
+    let d = Math.sqrt(dx*dx+dy*dy);
+    if (d == 0){
+      i++;
+      continue;
+    }
+    let n = ~~(d/step);
+    let rest = (n*step)/d;
+    let rpx = a[0] * (1-rest) + b[0] * rest;
+    let rpy = a[1] * (1-rest) + b[1] * rest;
+    for (let j = 1; j <= n; j++){
+      let t = j/n;
+      let x = a[0]*(1-t) + rpx*t;
+      let y = a[1]*(1-t) + rpy*t;
+      let xy = [x,y];
+      for (let k = 2; k < a.length; k++){
+        xy.push(a[k]*(1-t) + (a[k] * (1-rest) + b[k] * rest)*t);
+      }
+      out.push(xy);
+    }
+
+    next = null;
+    for (let j = i+2; j < polyline.length; j++){
+      let b = polyline[j-1];
+      let c = polyline[j];
+      if (b[0] == c[0] && b[1] == c[1]){
+        continue;
+      }
+      let t = isect_circ_line(rpx,rpy,step,b[0],b[1],c[0],c[1]);
+      if (t == null){
+        continue;
+      }
+ 
+      let q = [
+        b[0]*(1-t)+c[0]*t,
+        b[1]*(1-t)+c[1]*t,
+      ];
+      for (let k = 2; k < b.length; k++){
+        q.push(b[k]*(1-t)+c[k]*t);
+      }
+      out.push(q);
+      polyline[j-1] = q;
+      next = j-1;
+      break;
+    }
+    if (next == null){
+      break;
+    }
+    i = next;
+
+  }
+
+  if (out.length > 1){
+    let lx = out[out.length-1][0];
+    let ly = out[out.length-1][1];
+    let mx = polyline[polyline.length-1][0];
+    let my = polyline[polyline.length-1][1];
+    let d = Math.sqrt((mx-lx)**2+(my-ly)**2);
+    if (d < step*0.5){
+      out.pop(); 
+    }
+  }
+  out.push(polyline[polyline.length-1].slice());
+  return out;
+}
+
+
+function pt_seg_dist(p, p0, p1)  {
+  // https://stackoverflow.com/a/6853926
+  let x = p[0];   let y = p[1];
+  let x1 = p0[0]; let y1 = p0[1];
+  let x2 = p1[0]; let y2 = p1[1];
+  let A = x - x1; let B = y - y1; let C = x2 - x1; let D = y2 - y1;
+  let dot = A*C+B*D;
+  let len_sq = C*C+D*D;
+  let param = -1;
+  if (len_sq != 0) {
+    param = dot / len_sq;
+  }
+  let xx; let yy;
+  if (param < 0) {
+    xx = x1; yy = y1;
+  }else if (param > 1) {
+    xx = x2; yy = y2;
+  }else {
+    xx = x1 + param*C;
+    yy = y1 + param*D;
+  }
+  let dx = x - xx;
+  let dy = y - yy;
+  return Math.sqrt(dx*dx+dy*dy);
+}
+
+function approx_poly_dp(polyline, epsilon){
+  if (polyline.length <= 2){
+    return polyline;
+  }
+  let dmax   = 0;
+  let argmax = -1;
+  for (let i = 1; i < polyline.length-1; i++){
+    let d = pt_seg_dist(polyline[i] , 
+                        polyline[0] , 
+                        polyline[polyline.length-1] );
+    if (d > dmax){
+      dmax = d;
+      argmax = i;
+    }  
+  }
+  let ret = [];
+  if (dmax > epsilon){
+    let L = approx_poly_dp(polyline.slice(0,argmax+1),epsilon);
+    let R = approx_poly_dp(polyline.slice(argmax,polyline.length),epsilon);
+    ret = ret.concat(L.slice(0,L.length-1)).concat(R);
+  }else{
+    ret.push(polyline[0].slice());
+    ret.push(polyline[polyline.length-1].slice());
+  }
+  return ret;
+}
+
+function distsq(x0, y0, x1, y1) {
+  let dx = x0-x1;
+  let dy = y0-y1;
+  return dx*dx+dy*dy;
+}
+function poissondisk(W, H, r, samples) {
+  let grid = [];
+  let active = [];
+  let w =  ((r) / (1.4142135624));
+  let r2 = ((r) * (r));
+  let cols = (~~(((W) / (w))));
+  let rows = (~~(((H) / (w))));
+  for (let i = (0); Number((i) < (((cols) * (rows)))); i += (1)) {
+    (grid).splice((grid.length), 0, (-1));
+  };
+  let pos = [(((W) / (2.0))), (((H) / (2.0)))];
+  (samples).splice((samples.length), 0, (pos));
+  for (let i = (0); Number((i) < (samples.length)); i += (1)) {
+    let col = (~~(((((((samples)[i]))[0])) / (w))));
+    let row = (~~(((((((samples)[i]))[1])) / (w))));
+    ((grid)[((col) + (((row) * (cols))))] = i);
+    (active).splice((active.length), 0, (((samples)[i])));
+  };
+  while (active.length) {
+    let ridx = (~~(((rand()) * (active.length))));
+    pos = ((active)[ridx]);
+    let found = 0;
+    for (let n = (0); Number((n) < (30)); n += (1)) {
+      let sr = ((r) + (((rand()) * (r))));
+      let sa = ((6.2831853072) * (rand()));
+      let sx = ((((pos)[0])) + (((sr) * (Math.cos(sa)))));
+      let sy = ((((pos)[1])) + (((sr) * (Math.sin(sa)))));
+      let col = (~~(((sx) / (w))));
+      let row = (~~(((sy) / (w))));
+      if (((((((((Number((col) > (0))) && (Number((row) > (0))))) && (Number((col) < (((cols) - (1))))))) && (Number((row) < (((rows) - (1))))))) && (Number((((grid)[((col) + (((row) * (cols))))])) == (-1))))) {
+        let ok = 1;
+        for (let i = (-1); Number((i) <= (1)); i += (1)) {
+          for (let j = (-1); Number((j) <= (1)); j += (1)) {
+            let idx = ((((((((row) + (i))) * (cols))) + (col))) + (j));
+            let nbr = ((grid)[idx]);
+            if (Number((-1) != (nbr))) {
+              let d = distsq(sx, sy, ((((samples)[nbr]))[0]), ((((samples)[nbr]))[1]));
+              if (Number((d) < (r2))) {
+                ok = 0;
+              };
+            };
+          };
+        };
+        if (ok) {
+          found = 1;
+          ((grid)[((((row) * (cols))) + (col))] = samples.length);
+          let sample = [(sx), (sy)];
+          (active).splice((active.length), 0, (sample));
+          (samples).splice((samples.length), 0, (sample));
+        };
+      };
+    };
+    if (Number(!(found))) {
+      (active).splice((ridx), (1));
+    };
+  };
+}
+
+
+function draw_svg(polylines){
+  let o = `<svg xmlns="http://www.w3.org/2000/svg" width="520" height="320">`
+  o += `<rect x="0" y="0" width="520" height="320" fill="floralwhite"/><rect x="10" y="10" width="500" height="300" stroke="black" stroke-width="1" fill="none"/><path stroke="black" stroke-width="1" fill="none" stroke-linecap="round" stroke-linejoin="round" d="`
+  for (let i = 0; i < polylines.length; i++){
+    o += '\nM ';
+    for (let j = 0; j < polylines[i].length; j++){
+      let [x,y] = polylines[i][j];
+      o += `${(~~((x+10)*100)) /100} ${(~~((y+10)*100)) /100} `;
+    }
+  }
+  o += `\n"/></svg>`
+  return o;
+}
+
+function draw_svg_anim(polylines,speed){
+  let o = `<svg xmlns="http://www.w3.org/2000/svg" width="520" height="320">`;
+  o += `<rect x="0" y="0" width="520" height="320" fill="floralwhite"/><rect x="10" y="10" width="500" height="300" stroke="black" stroke-width="1" fill="none"/>`
+  let lengths = [];
+  let acc_lengths = [];
+  let total_l = 0;
+  for (let i = 0; i < polylines.length; i++){
+    let l = 0;
+    for (let j = 1; j < polylines[i].length; j++){
+      l += Math.hypot(
+        polylines[i][j-1][0]-polylines[i][j][0],
+        polylines[i][j-1][1]-polylines[i][j][1]
+      );
+    }
+    lengths.push(l);
+    acc_lengths.push(total_l);
+    total_l+=l;
+  }
+  for (let i = 0; i < polylines.length; i++){
+    let l = lengths[i];
+    o += `
+    <path 
+      stroke="black" 
+      stroke-width="1" 
+      fill="none" 
+      stroke-dasharray="${l}"
+      stroke-dashoffset="${l}"
+      d="M`;
+    for (let j = 0; j < polylines[i].length; j++){
+      o += polylines[i][j] + ' ';
+    }
+    let t = speed*l;
+    o += `">
+    <animate id="a${i}"
+      attributeName="stroke-dashoffset" 
+      fill="freeze"
+      from="${l}" to="${0}" dur="${t}s" 
+      begin="${(acc_lengths[i])*speed}s;a${i}.end+${8+speed*total_l-t}s"/>
+    />
+    <animate id="b${i}"
+      attributeName="stroke-dashoffset" 
+      fill="freeze"
+      from="${0}" to="${l}" dur="${3}s" 
+      begin="${5+speed*total_l}s;b${i}.end+${5+speed*total_l}s"/>
+    />
+    </path>`;
+  }
+  o += `</svg>`;
+  return o;
+}
+
+function draw_ps(polylines){
+  let o = `%!PS-Adobe-3.0 EPSF-3.0
+%%BoundingBox: 0 0 520 320
+1 setlinewidth
+0.5 0.5 translate
+/m /moveto load def
+/l /lineto load def
+/F /stroke load def
+%%EndPageSetup
+10 10 m
+510 10 l
+510 310 l
+10 310 l
+closepath
+F
+`;
+  for (let i = 0; i < polylines.length; i++){
+    for (let j = 0; j < polylines[i].length; j++){
+      let [x,y] = polylines[i][j];
+      o += `${(~~((x+10)*100)) /100} ${(~~((310-y)*100)) /100} `;
+      if (j == 0) {
+        o += `m\n`;
+      } else {
+        o += `l\n`;
+      }
+    }
+    o += `F\n\n`;
+  }
+  return o;
+}
+
+
+
+
+function pow(a,b){
+  return Math.sign(a) * Math.pow(Math.abs(a),b);
+}
+
+function gauss2d(x, y){
+  let z0 = Math.exp(-0.5*x*x);
+  let z1 = Math.exp(-0.5*y*y);
+  return z0*z1;
+ }
+
+function squama_mask(w,h){
+  let p = [];
+  let n = 7;
+  for (let i = 0; i < n; i++){
+    let t = i/n;
+    let a = t * PI * 2;
+    let x = -pow(Math.cos(a),1.3)*w;
+    let y =  pow(Math.sin(a),1.3)*h;
+    p.push([x,y]);
+  }
+  return p;
+}
+
+function squama(w,h,m=3) {
+  let p = [];
+  let n = 8;
+  for (let i = 0; i < n; i++){
+    let t = i/(n-1);
+    let a = t * PI + PI/2;
+    let x = -pow(Math.cos(a),1.4)*w;
+    let y =  pow(Math.sin(a),1.4)*h;
+    p.push([x,y]);
+  }
+  let q = [p];
+  for (let i = 0; i < m; i++){
+    let t = i/(m-1);
+    q.push([
+      [-w*0.3 + (rand()-0.5),-h*0.2+t*h*0.4 + (rand()-0.5)],
+      [ w*0.5 + (rand()-0.5),-h*0.3+t*h*0.6 + (rand()-0.5)]
+    ]);
+  }
+  return q;
+}
+
+function trsl_poly(poly,x,y){
+  return poly.map(xy=>[xy[0]+x,xy[1]+y]);
+}
+function scl_poly(poly,sx,sy){
+  if (sy === undefined) sy = sx;
+  return poly.map(xy=>[xy[0]*sx,xy[1]*sy]);
+}
+function shr_poly(poly,sx){
+  return poly.map(xy=>[xy[0]+xy[1]*sx,xy[1]]);
+}
+function rot_poly(poly,th){
+  let qoly = [];
+  let costh = Math.cos(th);
+  let sinth = Math.sin(th);
+  for (let i = 0; i < poly.length; i++){
+    let [x0,y0] = poly[i]
+    let x = x0* costh-y0*sinth;
+    let y = x0* sinth+y0*costh;
+    qoly.push([x,y]);
+  }
+  return qoly;
+}
+
+function squama_mesh(m,n,uw,uh,squama_func,noise_x,noise_y,interclip=true){
+  let clipper = null;
+
+  let pts = [];
+  for (let i = 0; i < n; i++){
+    for (let j = 0; j < m; j++){
+      let x = j*uw;
+      let y = (n*uh/2) - Math.cos(i/(n-1) * PI) * (n*uh/2);
+      let a = noise(x*0.005,y*0.005)*PI*2-PI;
+      let r = noise(x*0.005,y*0.005);
+      let dx = Math.cos(a)*r*noise_x;
+      let dy = Math.cos(a)*r*noise_y;
+      pts.push([x+dx,y+dy]);
+    }
+  }
+  let out = [];
+
+  let whs = [];
+  for (let i = 0; i < n; i++){
+    for (let j = 0; j < m; j++){
+      if (i == 0 || j == 0 || i == n-1 || j == m-1){
+        whs.push([uw/2,uh/2]);
+        continue;
+      }
+      let a = pts[i*m+j];
+      let b = pts[i*m+j+1];
+      let c = pts[i*m+j-1];
+      let d = pts[(i-1)*m+j];
+      let e = pts[(i+1)*m+j];
+
+      let dw = (dist(...a,...b) + dist(...a,...c))/4
+      let dh = (dist(...a,...d) + dist(...a,...e))/4
+      whs.push([dw,dh]);
+    }
+  }
+
+  for (let j = 1; j < m-1; j++){
+    for (let i = 1; i < n-1; i++){
+      let [x,y]  = pts[i*m+j];
+      let [dw,dh]= whs[i*m+j];
+      let q = trsl_poly(squama_mask(dw,dh),x,y);
+
+      let p = squama_func(x,y,dw,dh).map(a=>trsl_poly(a,x,y));
+      if (!interclip){
+        out.push(...p);
+      }else{
+        if (clipper){
+          out.push(...clip_multi(p,clipper).false);
+          clipper = poly_union(clipper,q);
+        }else{
+          out.push(...p);
+          clipper = q;
+        }
+      }
+    }
+    for (let i = 1; i < n-1; i++){
+      let a = pts[i*m+j];
+      let b = pts[i*m+j+1];
+      let c = pts[(i+1)*m+j];
+      let d = pts[(i+1)*m+j+1];
+
+      let [dwa,dha] = whs[i*m+j];
+      let [dwb,dhb] = whs[i*m+j+1];
+      let [dwc,dhc] = whs[(i+1)*m+j];
+      let [dwd,dhd] = whs[(i+1)*m+j+1];
+
+      let [x,y] = [(a[0]+b[0]+c[0]+d[0])/4,(a[1]+b[1]+c[1]+d[1])/4];
+      let [dw,dh] = [(dwa+dwb+dwc+dwd)/4,(dha+dhb+dhc+dhd)/4];
+      dw *= 1.2;
+      let q = trsl_poly(squama_mask(dw,dh),x,y);
+
+      let p = squama_func(x,y,dw,dh).map(a=>trsl_poly(a,x,y));
+      if (!interclip){
+        out.push(...p);
+      }else{
+        if (clipper){
+          out.push(...clip_multi(p,clipper).false);
+          clipper = poly_union(clipper,q);
+        }else{
+          out.push(...p);
+          clipper = q;
+        }
+      }
+    }
+  }
+  // for (let i = 0; i < n-1; i++){
+  //   for (let j = 0; j < m-1; j++){
+  //     let a= pts[i*m+j];
+  //     let b= pts[i*m+j+1];
+  //     let c = pts[(i+1)*m+j];
+  //     out.push([a,b]);
+  //     out.push([a,c]);
+  //   }
+  // }
+  return out;
+}
+
+function pattern_dot(scale=1){
+  let samples = [];
+  poissondisk(500,300,20*scale,samples);
+  let rs = [];
+  for (let i = 0; i < samples.length; i++){
+    rs.push((rand()*5+10)*scale)
+  }
+  return function(x,y){
+    for (let i = 0; i < samples.length; i++){
+      let r = rs[i];
+      if (dist(x,y,...samples[i])<r){
+
+        let [x0,y0] = samples[i];
+        let dx = x - x0;
+        let dy = y - y0;
+        if (gauss2d(dx/r*2,dy/r*2)*noise(x,y,999) > 0.2){
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+}
+
+
+
+
+function fish_body_a(curve0,curve1,scale_scale,pattern_func){
+  let curve2 = [];
+  let curve3 = [];
+  for (let i = 0; i < curve0.length; i++){
+    curve2.push(lerp2d(...curve0[i],...curve1[i],0.95));
+    curve3.push(lerp2d(...curve0[i],...curve1[i],0.85));
+  }
+  let outline1 = curve0.concat(curve1.slice().reverse());
+  let outline2 = curve0.concat(curve2.slice().reverse());
+  let outline3 = curve0.concat(curve3.slice().reverse());
+
+  let bbox = get_bbox(curve0.concat(curve1));
+  let m = ~~(bbox.w/(scale_scale*15));
+  let n = ~~(bbox.h/(scale_scale*15));
+  let uw = bbox.w/m;
+  let uh = bbox.h/n;
+
+  let fn = pattern_func?((x,y,w,h)=>squama(w,h,Number(pattern_func(x,y))*3)):((x,y,w,h)=>squama(w,h))
+  let sq = squama_mesh(m,n+3,uw,uh,fn,uw*3,uh*3,true).map(a=>trsl_poly(a,bbox.x,bbox.y-uh*1.5));
+  let o0 = clip_multi(sq,outline2)[true];
+  let o1 = clip_multi(o0,outline3);
+  o1.false = o1.false.filter(x=>rand()<0.6);
+  let o = [];
+  o.push(curve0,curve1.slice().reverse(),...o1.true,...o1.false);
+  return o;
+}
+
+function fish_body_b(curve0,curve1,scale_scale,pattern_func){
+  let curve2 = [];
+  for (let i = 0; i < curve0.length; i++){
+    curve2.push(lerp2d(...curve0[i],...curve1[i],0.95));
+  }
+  let outline1 = curve0.concat(curve1.slice().reverse());
+  let outline2 = curve0.concat(curve2.slice().reverse());
+
+  let bbox = get_bbox(curve0.concat(curve1));
+  let m = ~~(bbox.w/(scale_scale*5));
+  let n = ~~(bbox.h/(scale_scale*5));
+  let uw = bbox.w/m;
+  let uh = bbox.h/n;
+
+  let sq = squama_mesh(m,n+16,uw,uh,(x,y,w,h)=>squama(w*0.7,h*0.6,0),uw*8,uh*8,false).map(a=>trsl_poly(a,bbox.x,bbox.y-uh*8));
+  let o0 = clip_multi(sq,outline2)[true];
+
+  let o1 = [];
+  for (let i = 0; i < o0.length; i++){
+    let [x,y] = o0[i][0];
+    let t = (y-bbox.y)/bbox.h;
+    // if (rand() > t){
+    //   o1.push(o0[i]);
+    // }
+    // if ((~~(x/30))%2 || (rand() > t && rand()>t)){
+    //   o1.push(o0[i]);
+    // }
+    if (pattern_func){
+      if (pattern_func(x,y) || (rand() > t && rand()>t)) {
+        o1.push(o0[i]);
+      }
+    }else{
+      if (rand() > t){
+        o1.push(o0[i]);
+      }
+    }
+  }
+  let o = [];
+  o.push(curve0,curve1.slice().reverse(),...o1);
+  return o;
+}
+
+
+function ogee(x){
+  return 4 * Math.pow(x-0.5,3) + 0.5;
+}
+
+function fish_body_c(curve0,curve1,scale_scale){
+  let step = 6*scale_scale;
+
+  let curve2 = [];
+  let curve3 = [];
+
+  for (let i = 0; i < curve0.length; i++){
+    curve2.push(lerp2d(...curve0[i],...curve1[i],0.95));
+    curve3.push(lerp2d(...curve0[i],...curve1[i],0.4));
+  }
+  let outline1 = curve0.concat(curve1.slice().reverse());
+  let outline2 = curve0.concat(curve2.slice().reverse());
+
+  let bbox = get_bbox(curve0.concat(curve1));
+  bbox.x -= step;
+  bbox.y -= step;
+  bbox.w += step*2;
+  bbox.h += step*2;
+
+  let lines = [curve3.reverse()];
+
+  for (let i = -bbox.h; i < bbox.w; i+=step){
+    let x0 = bbox.x + i;
+    let y0 = bbox.y;
+    let x1 = bbox.x + i + bbox.h;
+    let y1 = bbox.y + bbox.h;
+    lines.push([[x0,y0],[x1,y1]]);
+  }
+  for (let i = 0; i < bbox.w+bbox.h; i+=step){
+    let x0 = bbox.x + i;
+    let y0 = bbox.y;
+    let x1 = bbox.x + i - bbox.h;
+    let y1 = bbox.y + bbox.h;
+    lines.push([[x0,y0],[x1,y1]]);
+  }
+  for (let i = 0; i < lines.length; i++){
+    lines[i] = resample(lines[i],4);
+    for (let j = 0;j < lines[i].length; j++){
+      let [x,y] = lines[i][j];
+      let t = (y-bbox.y)/bbox.h;
+      let y1 = -Math.cos(t*PI)*bbox.h/2+bbox.y+bbox.h/2;
+
+      let dx = (noise(x*0.005,y1*0.005,0.1)-0.5)*50;
+      let dy = (noise(x*0.005,y1*0.005,1.2)-0.5)*50;
+
+      lines[i][j][0] += dx;
+      lines[i][j][1] = y1 + dy;
+    }
+  }
+
+  let o0 = clip_multi(lines,outline2)[true];
+
+  o0 = clip_multi(o0,(x,y,t)=>(rand()>t||rand()>t),binclip).true;
+  
+
+  let o = [];
+  
+  o.push(curve0,curve1.slice().reverse(),...o0);
+  return o;
+}
+
+function fish_body_d(curve0,curve1,scale_scale){
+  let curve2 = [];
+  for (let i = 0; i < curve0.length; i++){
+    curve2.push(lerp2d(...curve0[i],...curve1[i],0.4));
+  }
+  curve0 = resample(curve0,10*scale_scale);
+  curve1 = resample(curve1,10*scale_scale);
+  curve2 = resample(curve2,10*scale_scale);
+
+  let outline1 = curve0.concat(curve1.slice().reverse());
+  let outline2 = curve0.concat(curve2.slice().reverse());
+
+  let o0 = [curve2];
+  for (let i = 3; i < Math.min(curve0.length,curve1.length,curve2.length); i++){
+    let a = [curve0[i],curve2[i-3]];
+    let b = [curve2[i-3],curve1[i]];
+    
+    o0.push(a,b);
+  }
+
+  let o1 = [];
+  for (let i = 0; i < o0.length; i++){
+    o0[i] = resample(o0[i],4);
+    for (let j = 0; j < o0[i].length; j++){
+      let [x,y] = o0[i][j];
+      let dx = 30*(noise(x*0.01,y*0.01,-1)-0.5);
+      let dy = 30*(noise(x*0.01,y*0.01,9)-0.5);
+      o0[i][j][0] += dx;
+      o0[i][j][1] += dy;
+    }
+    
+    o1.push(...binclip(o0[i],(x,y,t)=>(
+      (rand()>Math.cos(t*PI) && rand() < x/500) || (rand()>Math.cos(t*PI) && rand() < x/500)
+    )).true);
+  }
+  o1 = clip_multi(o1,outline1).true;
+
+  let sh = vein_shape(outline1);
+
+  let o = [];
+  o.push(curve0,curve1.slice().reverse(),...o1,...sh);
+  return o;
+}
+
+
+
+
+function fin_a(curve,ang0,ang1,func,clip_root=false,curvature0=0,curvature1=0,softness=10){
+  let angs = [];
+  for (let i = 0; i < curve.length; i++){
+    
+    if (i == 0){
+      angs.push( Math.atan2(curve[i+1][1]-curve[i][1], curve[i+1][0]-curve[i][0]) - PI/2 );
+    }else if (i == curve.length-1){
+      angs.push( Math.atan2(curve[i][1]-curve[i-1][1], curve[i][0]-curve[i-1][0]) - PI/2 );
+    }else{
+      let a0 = Math.atan2(curve[i-1][1]-curve[i][1], curve[i-1][0]-curve[i][0]);
+      let a1 = Math.atan2(curve[i+1][1]-curve[i][1], curve[i+1][0]-curve[i][0]);
+      while (a1 > a0){
+        a1 -= PI*2;
+      }
+      a1 += PI*2;
+      let a = (a0+a1)/2;
+      angs.push(a);
+    }
+  }
+  let out0 = [];
+  let out1 = [];
+  let out2 = [];
+  let out3 = [];
+  for (let i = 0; i < curve.length; i++){
+    let t = i/(curve.length-1);
+    let aa = lerp(ang0,ang1,t);
+    let a = angs[i]+aa;
+    let w = func(t);
+
+    let [x0,y0] = curve[i];
+    let x1 = x0 + Math.cos(a)*w;
+    let y1 = y0 + Math.sin(a)*w;
+    
+    let p = resample([[x0,y0],[x1,y1]],3);
+    for (let j = 0; j < p.length; j++){
+      let s = j/(p.length-1);
+      let ss = Math.sqrt(s);
+      let [x,y] = p[j];
+      let cv = lerp(curvature0,curvature1,t)*Math.sin(s*PI);
+      p[j][0] += noise(x*0.1,y*0.1,3)*ss*softness + Math.cos(a-PI/2)*cv;
+      p[j][1] += noise(x*0.1,y*0.1,4)*ss*softness + Math.sin(a-PI/2)*cv;
+    }
+    if (i == 0){
+      out2 = p;
+    }else if (i == curve.length-1){
+      out3 = p.slice().reverse();
+    }else{
+      out0.push(p[p.length-1]);
+      // if (i % 2){
+        let q = p.slice(clip_root?(   ~~(rand()*4)  ):0,Math.max(2,~~(p.length*(rand()*0.5+0.5))));
+        if (q.length){
+          out1.push(q);
+        }
+      // }
+    }
+  }
+  out0 = resample(out0,3);
+  for (let i = 0; i < out0.length; i++){
+    let [x,y] = out0[i];
+    out0[i][0] += (noise(x*0.1,y*0.1)*6-3)*(softness/10);
+    out0[i][1] += (noise(x*0.1,y*0.1)*6-3)*(softness/10);
+  }
+  let o = out2.concat(out0).concat(out3);
+  out1.unshift(o);
+  return [o.concat(curve.slice().reverse()),out1];
+}
+
+
+function fin_b(curve,ang0,ang1,func,dark=1){
+  let angs = [];
+  for (let i = 0; i < curve.length; i++){
+    
+    if (i == 0){
+      angs.push( Math.atan2(curve[i+1][1]-curve[i][1], curve[i+1][0]-curve[i][0]) - PI/2 );
+    }else if (i == curve.length-1){
+      angs.push( Math.atan2(curve[i][1]-curve[i-1][1], curve[i][0]-curve[i-1][0]) - PI/2 );
+    }else{
+      let a0 = Math.atan2(curve[i-1][1]-curve[i][1], curve[i-1][0]-curve[i][0]);
+      let a1 = Math.atan2(curve[i+1][1]-curve[i][1], curve[i+1][0]-curve[i][0]);
+      while (a1 > a0){
+        a1 -= PI*2;
+      }
+      a1 += PI*2;
+      let a = (a0+a1)/2;
+      angs.push(a);
+    }
+  }
+  
+  let out0 = [];
+  let out1 = [];
+  let out2 = [];
+  let out3 = [];
+  for (let i = 0; i < curve.length; i++){
+    let t = i/(curve.length-1);
+    let aa = lerp(ang0,ang1,t);
+    let a = angs[i]+aa;
+    let w = func(t);
+
+    let [x0,y0] = curve[i];
+    let x1 = x0 + Math.cos(a)*w;
+    let y1 = y0 + Math.sin(a)*w;
+
+    let b = [
+      x1 + 0.5 * Math.cos(a-PI/2),
+      y1 + 0.5 * Math.sin(a-PI/2),
+    ];
+    let c = [
+      x1 + 0.5 * Math.cos(a+PI/2),
+      y1 + 0.5 * Math.sin(a+PI/2),
+    ];
+
+    let p = [
+      curve[i][0] + 1.8 * Math.cos(a-PI/2),
+      curve[i][1] + 1.8 * Math.sin(a-PI/2),
+    ];
+    let q = [
+      curve[i][0] + 1.8 * Math.cos(a+PI/2),
+      curve[i][1] + 1.8 * Math.sin(a+PI/2),
+    ];
+    out1.push([x1,y1]);
+    out0.push([p,b,c,q]);
+  }
+
+  let n = 10;
+  for (let i = 0; i < curve.length-1; i++){
+
+    let [_,__,a0,q0] = out0[i];
+    let [p1,a1,___,____] = out0[i+1];
+
+    let b = lerp2d(...a0,...q0,0.1);
+    let c = lerp2d(...a1,...p1,0.1);
+
+    let o = [];
+    let ang = Math.atan2(c[1]-b[1],c[0]-b[0]);
+
+    for (let j = 0; j < n; j++){
+      let t = j/(n-1);
+      let d = Math.sin(t*PI)*2;
+      let a = lerp2d(...b,...c,t);
+      o.push([
+        a[0] + Math.cos(ang+PI/2)*d,
+        a[1] + Math.sin(ang+PI/2)*d,
+      ])
+    }
+    
+    // out2.push([b,c]);
+    out2.push(o);
+
+    let m = ~~( Math.min(dist(...a0,...q0),dist(...a1,...p1) ) /10 * dark);
+    let e = lerp2d(...curve[i],...curve[i+1],0.5);
+    for (let k = 0; k < m; k ++){
+      let p = [];
+      let s= k/m*0.7;
+      for (let j = 1; j < n-1; j++){
+        p.push(lerp2d(...o[j],...e,s));
+      }
+      out3.push(p);
+    }
+  }
+
+  let out4 = [];
+  if (out0.length > 1){
+    let clipper = out0[0];
+    out4.push(out0[0])
+    for (let i = 1; i < out0.length; i++){
+      out4.push(...clip(out0[i],clipper).false);
+      clipper = poly_union(clipper,out0[i]);
+    }
+  }
+
+  return [out2.flat().concat(curve.slice().reverse()),out4.concat(out2).concat(out3)];
+}
+
+
+function finlet(curve,h,dir=1){
+  let angs = [];
+  for (let i = 0; i < curve.length; i++){
+    if (i == 0){
+      angs.push( Math.atan2(curve[i+1][1]-curve[i][1], curve[i+1][0]-curve[i][0]) - PI/2 );
+    }else if (i == curve.length-1){
+      angs.push( Math.atan2(curve[i][1]-curve[i-1][1], curve[i][0]-curve[i-1][0]) - PI/2 );
+    }else{
+      let a0 = Math.atan2(curve[i-1][1]-curve[i][1], curve[i-1][0]-curve[i][0]);
+      let a1 = Math.atan2(curve[i+1][1]-curve[i][1], curve[i+1][0]-curve[i][0]);
+      while (a1 > a0){
+        a1 -= PI*2;
+      }
+      a1 += PI*2;
+      let a = (a0+a1)/2;
+      angs.push(a);
+    }
+  }
+  let out0 = [];
+  for (let i = 0; i < curve.length; i++){
+    let t = i/(curve.length-1);
+    let a = angs[i];
+    let w = (i+1) % 3 ? 0 : h;
+    if (dir > 0){
+      w *= (1-t*0.5);
+    }else{
+      w *= 0.5 + t * 0.5
+    }
+
+    let [x0,y0] = curve[i];
+    let x1 = x0 + Math.cos(a)*w;
+    let y1 = y0 + Math.sin(a)*w;
+    out0.push([x1,y1]);
+
+  }
+  out0 = resample(out0,2);
+  for (let i = 0; i < out0.length; i++){
+    let [x,y] = out0[i];
+    out0[i][0] += noise(x*0.1,y*0.1)*2-3;
+    out0[i][1] += noise(x*0.1,y*0.1)*2-3;
+  }
+  out0.push(curve[curve.length-1]);
+  return [out0.concat(curve.slice().reverse()),[out0]];
+}
+
+function fin_adipose(curve,dx,dy,r){
+  let n = 20;
+  let [x0,y0] = curve[~~(curve.length/2)];
+  let [x,y] = [x0+dx,y0+dy];
+  let [x1,y1] = curve[0];
+  let [x2,y2] = curve[curve.length-1];
+  let d1 = dist(x,y,x1,y1);
+  let d2 = dist(x,y,x2,y2);
+  let a1 = Math.acos(r/d1);
+  let a2 = Math.acos(r/d2);
+  let a01 = Math.atan2(y1-y,x1-x)+a1;
+  let a02 = Math.atan2(y2-y,x2-x)-a2;
+  a02 -= PI*2;
+  while (a02 < a01){
+    a02 += PI*2;
+  }
+  let out0 = [[x1,y1]]
+  for (let i = 0; i < n; i++){
+    let t = i/(n-1);
+    let a = lerp(a01,a02,t);
+    let p = [
+      x+Math.cos(a)*r,
+      y+Math.sin(a)*r,
+    ]
+    out0.push(p);
+  }
+  out0.push([x2,y2]);
+  out0 = resample(out0,3);
+  for (let i = 0; i < out0.length; i++){
+    let t = i/(out0.length-1);
+    let s = Math.sin(t*PI);
+    let [x,y] = out0[i];
+    out0[i][0] += (noise(x*0.01,y*0.01)-0.5)*s*50;
+    out0[i][1] += (noise(x*0.01,y*0.01)-0.5)*s*50;
+  }
+  let cc = out0.concat(curve.slice().reverse());
+  let out1 = clip(trsl_poly(out0,0,4),cc).true;
+
+  out1 = clip_multi(out1,(x,y,t)=>(rand()<Math.sin(t*PI)),binclip).true;
+  return [cc,[out0,...out1]];
+
+}
+
+
+function fish_lip(x0,y0,x1,y1,w){
+  x0 += rand()*0.001-0.0005;
+  y0 += rand()*0.001-0.0005;
+  x1 += rand()*0.001-0.0005;
+  y1 += rand()*0.001-0.0005;
+  let h = dist(x0,y0,x1,y1);
+  let a0 = Math.atan2(y1-y0,x1-x0);
+  let n = 10;
+  let ang = Math.acos(w/h);
+  let dx = Math.cos(a0+PI/2)*0.5;
+  let dy = Math.sin(a0+PI/2)*0.5;
+  let o = [[x0-dx,y0-dy]];
+  for (let i = 0; i < n; i++){
+    let t = i/(n-1);
+    let a = lerp(ang,PI*2-ang,t) + a0;
+    let x = -Math.cos(a)*w + x1;
+    let y = -Math.sin(a)*w + y1;
+    o.push([x,y]);
+  }
+  o.push([x0+dx,y0+dy]);
+  o = resample(o,2.5);
+  for (let i = 0; i < o.length; i++){
+    let [x,y] = o[i];
+    o[i][0] += noise(x*0.05,y*0.05,-1)*2-1;
+    o[i][1] += noise(x*0.05,y*0.05,-2)*2-1;
+  }
+  return o;
+}
+
+function fish_teeth(x0,y0,x1,y1,h,dir,sep=3.5){
+  let n = Math.max(2,~~(dist(x0,y0,x1,y1)/sep));
+  let ang = Math.atan2(y1-y0,x1-x0);
+  let out = [];
+  for (let i = 0; i < n; i++){
+    let t = i/(n-1);
+    let a = lerp2d(x0,y0,x1,y1,t);
+    let w = h*t;
+    let b = [
+      a[0]+Math.cos(ang+dir*PI/2)*w,
+      a[1]+Math.sin(ang+dir*PI/2)*w,
+    ];
+    let c = [
+      a[0] + 1 * Math.cos(ang),
+      a[1] + 1 * Math.sin(ang),
+    ];
+    let d = [
+      a[0] + 1 * Math.cos(ang+PI),
+      a[1] + 1 * Math.sin(ang+PI),
+    ];
+    let e = lerp2d(...c,...b,0.7);
+    let f = lerp2d(...d,...b,0.7);
+    let g = [
+      a[0]+Math.cos(ang+dir*(PI/2+0.15))*w,
+      a[1]+Math.sin(ang+dir*(PI/2+0.15))*w,
+    ]
+    out.push([c,e,g,f,d])
+    // out.push(barbel(...a,10,ang+dir*PI/2))
+  }
+  return out;
+}
+
+function fish_jaw(x0,y0,x1,y1,x2,y2){
+  let n = 10;
+  let ang = Math.atan2(y2-y0,x2-x0);
+  let d = dist(x0,y0,x2,y2);
+  let o = [];
+  for (let i = 0; i < n; i++){
+    let t = i/(n-1);
+    let s = Math.sin(t*PI);
+    let w = s*d/20;
+    let p = lerp2d(x2,y2,x0,y0,t);
+    let q = [
+      p[0] + Math.cos(ang-PI/2)*w,
+      p[1] + Math.sin(ang-PI/2)*w,
+    ]
+    let qq = [
+      q[0] + (noise(q[0]*0.01,q[1]*0.01,1)-0.5)*4*s,
+      q[1] + (noise(q[0]*0.01,q[1]*0.01,4)-0.5)*4*s,
+    ];
+    o.push(qq);
+  }
+  return [[[x2,y2],[x1,y1],[x0,y0]],[o,...vein_shape(o,5)]];
+}
+
+
+function fish_eye_a(ex,ey,rad){
+  let n = 20;
+  let eye0 = [];
+  let eye1 = [];
+  let eye2 = [];
+  for (let i = 0; i < n; i++){
+    let t = i/(n-1);
+    let a = t * PI*2 + Math.PI/4*3;
+    eye0.push([
+      ex + Math.cos(a)*rad,
+      ey + Math.sin(a)*rad
+    ]);
+    if (t > 0.5){
+      eye1.push([
+        ex + Math.cos(a)*(rad*0.8),
+        ey + Math.sin(a)*(rad*0.8)
+      ]);
+    }
+    eye2.push([
+      ex + Math.cos(a)*(rad*0.4) -0.75,
+      ey + Math.sin(a)*(rad*0.4) -0.75
+    ]);
+  }
+
+  let ef = shade_shape(eye2,2.7,10,10);
+  return [eye0,[eye0,eye1,eye2,...ef]];
+}
+
+function fish_eye_b(ex,ey,rad){
+  let n = 20;
+  let eye0 = [];
+  let eye1 = [];
+  let eye2 = [];
+  for (let i = 0; i < n; i++){
+    let t = i/(n-1);
+    let a = t * PI*2+Math.E;
+    eye0.push([
+      ex + Math.cos(a)*rad,
+      ey + Math.sin(a)*rad
+    ]);
+    eye2.push([
+      ex + Math.cos(a)*(rad*0.4),
+      ey + Math.sin(a)*(rad*0.4)
+    ]);
+  }
+  let m =~~((rad*0.6)/2);
+  for (let i = 0; i < m; i++){
+    let r = rad - i * 2;
+    let e = [];
+    for (let i = 0; i < n; i++){
+      let t = i/(n-1);
+      let a = lerp(PI*7/8,PI*13/8,t)
+      e.push([
+        ex + Math.cos(a)*r,
+        ey + Math.sin(a)*r
+      ]);
+    
+    }
+    eye1.push(e);
+  }
+  let trig = [
+    [ex+Math.cos(-PI*3/4)*(rad*0.9),ey+Math.sin(-PI*3/4)*(rad*0.9)],
+    [ex+1,ey+1],
+    [ex+Math.cos(-PI*11/12)*(rad*0.9),ey+Math.sin(-PI*11/12)*(rad*0.9)],
+  ];
+  trig = resample(trig,3);
+  for (let i = 0; i < trig.length; i++){
+    let [x,y] = trig[i];
+    x += noise(x*0.1,y*0.1,22)*4-2;
+    y += noise(x*0.1,y*0.1,33)*4-2;
+    trig[i] = [x,y];
+  }
+  
+
+  let ef = fill_shape(eye2,1.5);
+
+  ef = clip_multi(ef,trig).false;
+  eye1 = clip_multi(eye1,trig).false;
+  eye2 = clip(eye2,trig).false;
+
+  return [eye0,[eye0,...eye1,...eye2,...ef]];
+}
+
+
+function barbel(x,y,n,ang,dd=3){
+  let curve = [[x,y]];
+  let sd = rand()*PI*2;
+  let ar = 1;
+  for (let i = 0; i < n; i++){
+    x += Math.cos(ang)*dd;
+    y += Math.sin(ang)*dd;
+    ang += (noise(i*0.1,sd)-0.5)*ar;
+    if (i < n/2){
+      ar *= 1.02;
+    }else{
+      ar *= 0.92;
+    }
+    curve.push([x,y]);
+  }
+  let o0 = [];
+  let o1 = [];
+  for (let i = 0; i < n-1; i++){
+    let t = i/(n-1);
+    let w = 1.5*(1-t);
+
+    let a = curve[i-1];
+    let b = curve[i];
+    let c = curve[i+1];
+
+    let a1 = Math.atan2(c[1]-b[1],c[0]-b[0]);
+    let a2;
+
+    if (a){
+      let a0 = Math.atan2(a[1]-b[1],a[0]-b[0]);
+      
+      a1 -= PI*2;
+      while (a1 < a0){
+        a1 += PI*2;
+      }
+      a2 = (a0+a1)/2;
+    }else{
+      a2 = a1-PI/2;
+    }
+
+    o0.push([
+      b[0]+Math.cos(a2)*w,
+      b[1]+Math.sin(a2)*w
+    ])
+    o1.push([
+      b[0]+Math.cos(a2+PI)*w,
+      b[1]+Math.sin(a2+PI)*w
+    ])
+  }
+  o0.push(curve[curve.length-1]);
+  return o0.concat(o1.slice().reverse());
+}
+
+function fish_head(x0,y0,x1,y1,x2,y2,arg){
+  let n = 20;
+  let curve0 = [];
+  let curve1 = [];
+  let curve2 = [];
+  for (let i = 0; i < n; i++){
+    let t = i/(n-1);
+    let a = PI/2 * t;
+    let x = x1-pow(Math.cos(a),1.5)*(x1-x0);
+    let y = y0-pow(Math.sin(a),1.5)*(y0-y1);
+    // let x = lerp(x0,x1,t);
+    // let y = lerp(y0,y1,t);
+
+    let dx = (noise(x*0.01,y*0.01,9)*40-20)*(1.01-t);
+    let dy = (noise(x*0.01,y*0.01,8)*40-20)*(1.01-t);
+    curve0.push([x+dx,y+dy]);
+  }
+  for (let i = 0; i < n; i++){
+    let t = i/(n-1);
+    let a = PI/2 * t;
+    let x = x2-pow(Math.cos(a),0.8)*(x2-x0);
+    let y = y0+pow(Math.sin(a),1.5)*(y2-y0);
+
+    let dx = (noise(x*0.01,y*0.01,9)*40-20)*(1.01-t);
+    let dy = (noise(x*0.01,y*0.01,8)*40-20)*(1.01-t);
+    curve1.unshift([x+dx,y+dy]);
+  }
+  let ang = Math.atan2(y2-y1,x2-x1);
+  for (let i = 1; i < n-1; i++){
+    let t = i/(n-1);
+    let p = lerp2d(x1,y1,x2,y2,t);
+    let s = pow(Math.sin(t*Math.PI),0.5);
+    let r = noise(t*2,1.2) * s * 20;
+
+    let dx = Math.cos(ang-Math.PI/2) * r;
+    let dy = Math.sin(ang-Math.PI/2) * r;
+    curve2.push([ p[0]+dx,p[1]+dy ])
+  }
+  let outline = curve0.concat(curve2).concat(curve1);
+
+  let inline = curve2.slice(~~(curve2.length/3)).concat(curve1.slice(0,~~(curve1.length/2))).slice(0,curve0.length);
+  for (let i = 0; i < inline.length; i++){
+    let t = i/(inline.length-1);
+    let s = Math.sin(t*PI)**2*0.1+0.12;
+    inline[i] = lerp2d(...inline[i],...curve0[i],s);
+  }
+  let dix = (x0-inline[inline.length-1][0])*0.3;
+  let diy = (y0-inline[inline.length-1][1])*0.2;
+  for (let i = 0; i < inline.length; i++){
+    inline[i][0] += dix;
+    inline[i][1] += diy;
+  }
+
+
+  let par = [0.475,0.375];
+  let ex = x0*par[0] + x1*par[1] + x2*(1-par[0]-par[1]);
+  let ey = y0*par[0] + y1*par[1] + y2*(1-par[0]-par[1]);
+  let d0 = pt_seg_dist([ex,ey],[x0,y0],[x1,y1]);
+  let d1 = pt_seg_dist([ex,ey],[x0,y0],[x2,y2]);
+  if (d0 < arg.eye_size && d1 < arg.eye_size){
+    arg.eye_size = Math.min(d0,d1);
+  }else if (d0 < arg.eye_size){
+    let ang = Math.atan2(y1-y0,x1-x0)+PI/2;
+    ex = x0*0.5+x1*0.5 + Math.cos(ang)*arg.eye_size;
+    ey = y0*0.5+y1*0.5 + Math.sin(ang)*arg.eye_size;
+  }
+
+  let jaw_pt0 = curve1[18-arg.mouth_size];
+  let jaw_l = dist(...jaw_pt0,...curve1[18])*arg.jaw_size;
+  let jaw_ang0 = Math.atan2(curve1[18][1]-jaw_pt0[1],curve1[18][0]-jaw_pt0[0]);
+  let jaw_ang =jaw_ang0- (arg.has_teeth*0.5+0.5)*arg.jaw_open*PI/4;
+  let jaw_pt1 = [
+    jaw_pt0[0]+Math.cos(jaw_ang)*jaw_l,
+    jaw_pt0[1]+Math.sin(jaw_ang)*jaw_l,
+  ]
+
+  let [eye0,ef] = (arg.eye_type?fish_eye_b:fish_eye_a)(ex,ey,arg.eye_size);
+  __fd_eye=[ex,ey,arg.eye_size]; // [knit-plush] expose eye position
+  ef = clip_multi(ef,outline).true;
+
+  let inlines = clip(inline,eye0).false;
+
+  let lip0 = fish_lip(...jaw_pt0,...curve1[18],3);
+
+  let lip1 = fish_lip(...jaw_pt0,...jaw_pt1,3);
+
+  let [jc,jaw] = fish_jaw(...curve1[15-arg.mouth_size],...jaw_pt0,...jaw_pt1);
+
+  jaw = clip_multi(jaw,lip1).false;
+  jaw = clip_multi(jaw,outline).false;
+
+  let teeth0s = [];
+  let teeth1s = [];
+  if (arg.has_teeth){
+    let teeth0 = fish_teeth(...jaw_pt0,...curve1[18],arg.teeth_length,-1,arg.teeth_space);
+    let teeth1 = fish_teeth(...jaw_pt0,...jaw_pt1,    arg.teeth_length,1,arg.teeth_space);
+
+    teeth0s = clip_multi(teeth0,lip0).false;
+    teeth1s = clip_multi(teeth1,lip1).false;
+  }
+
+  let olines = clip(outline,lip0).false;
+
+  let lip0s = clip(lip0,lip1).false;
+
+  let sh = shade_shape(outline,6,-6,-6);
+  sh = clip_multi(sh,lip0).false;
+  sh = clip_multi(sh,eye0).false;
+
+  let sh2 = vein_shape(outline,arg.head_texture_amount);
+
+  // let sh2 = patternshade_shape(outline,3,(x,y)=>{
+  //   return noise(x*0.1,y*0.1)>0.6;
+  // })
+
+  sh2 = clip_multi(sh2,lip0).false;
+  sh2 = clip_multi(sh2,eye0).false;
+  
+  let bbs = [];
+
+  lip1s = [lip1];
+
+  if (arg.has_moustache){
+    let bb0 = barbel(...jaw_pt0,arg.moustache_length,PI*3/4,1.5);
+    lip1s = clip(lip1,bb0).false;
+    jaw = clip_multi(jaw,bb0).false;
+    bbs.push(bb0);
+  }
+
+  if (arg.has_beard){
+    let jaw_pt;
+    if (jaw[0] && jaw[0].length){
+      jaw_pt = jaw[0][~~(jaw[0].length/2)];
+    }else{
+      jaw_pt = curve1[8];
+    }
+    let bb1 = trsl_poly(barbel(...jaw_pt,arg.beard_length,PI*0.6+rand()*0.4-0.2),rand()*1-0.5,rand()*1-0.5);
+    let bb2 = trsl_poly(barbel(...jaw_pt,arg.beard_length,PI*0.6+rand()*0.4-0.2),rand()*1-0.5,rand()*1-0.5);
+    let bb3 = trsl_poly(barbel(...jaw_pt,arg.beard_length,PI*0.6+rand()*0.4-0.2),rand()*1-0.5,rand()*1-0.5);
+  
+    let bb3c = clip_multi([bb3],bb2).false;
+    bb3c = clip_multi(bb3c,bb1).false;
+    let bb2c = clip_multi([bb2],bb1).false;
+    bbs.push(bb1,...bb2c,...bb3c);
+  }
+
+  let outlinel = [[0,0],[curve0[curve0.length-1][0],0],curve0[curve0.length-1],...curve2,curve1[0],[curve1[0][0],300],[0,300]];
+
+  
+  return [outlinel,[
+    ...olines,...inlines,
+    ...lip0s,...lip1s,
+    ...ef,...sh,...sh2,
+    ...bbs,
+    ...teeth0s,...teeth1s,
+    ...jaw]];
+}
+
+function bean(x){
+  return Math.pow(0.25-Math.pow(x-0.5,2),0.5)*(2.6+2.4*Math.pow(x,1.5))*0.542;
+}
+
+function deviate(n){
+  return rand()*2*n-n;
+}
+
+
+function fish(arg){
+  let n = 32;
+  let curve0 = [];
+  let curve1 = [];
+  if (arg.body_curve_type == 0){
+    let s = arg.body_curve_amount;
+    for (let i = 0; i < n; i++){
+      let t = i/(n-1);
+      
+      let x =  225 + (t-0.5)*arg.body_length;
+      let y = 150 - (Math.sin(t*PI)*lerp(0.5,1,noise(t*2,1))*s+(1-s))*arg.body_height;
+      curve0.push([x,y]);
+    }
+    for (let i = 0; i < n; i++){
+      let t = i/(n-1);
+      let x =  225 + (t-0.5)*arg.body_length;
+      let y = 150 + (Math.sin(t*PI)*lerp(0.5,1,noise(t*2,2))*s+(1-s))*arg.body_height;
+      curve1.push([x,y]);
+    }
+  }else if (arg.body_curve_type == 1){
+    for (let i = 0; i < n; i++){
+      let t = i/(n-1);
+      
+      let x = 225 + (t-0.5)*arg.body_length;
+      let y = 150-lerp(1-arg.body_curve_amount,1,lerp(0,1,noise(t*1.2,1))*bean(1-t))*arg.body_height;
+      curve0.push([x,y]);
+    }
+    for (let i = 0; i < n; i++){
+      let t = i/(n-1);
+      let x = 225 + (t-0.5)*arg.body_length;
+      let y = 150+lerp(1-arg.body_curve_amount,1,lerp(0,1,noise(t*1.2,2))*bean(1-t))*arg.body_height;
+      curve1.push([x,y]);
+    }
+  }
+  let outline = curve0.concat(curve1.slice().reverse());
+  let sh = shade_shape(outline,8,-12,-12);
+
+  let pattern_func;
+  if (arg.pattern_type == 0){
+    //none
+    pattern_func = null;
+  }else if (arg.pattern_type == 1){
+    // pattern_func = (x,y)=>{
+    //   return noise(x*0.1,y*0.1)>0.55;
+    // };
+    pattern_func = pattern_dot(arg.pattern_scale);
+  }else if (arg.pattern_type == 2){
+    pattern_func = (x,y)=>{
+      return (noise(x*0.1,y*0.1) * Math.max(0.35,(y-10)/280) ) < 0.2 ;
+    };
+  }else if (arg.pattern_type == 3){
+    pattern_func = (x,y)=>{
+      let dx = noise(x*0.01,y*0.01)*30;
+      return (~~((x+dx)/(30*arg.pattern_scale)))%2 == 1;
+    };
+  }else if (arg.pattern_type == 4){
+    //small dot;
+    pattern_func = null;
+  }
+
+  let bd;
+  if (arg.scale_type == 0){
+    bd = fish_body_a(curve0,curve1,arg.scale_scale,pattern_func);
+  }else if (arg.scale_type == 1){
+    bd = fish_body_b(curve0,curve1,arg.scale_scale,pattern_func);
+  }else if (arg.scale_type == 2){
+    bd = fish_body_c(curve0,curve1,arg.scale_scale);
+  }else if (arg.scale_type == 3){
+    bd = fish_body_d(curve0,curve1,arg.scale_scale);
+  }
+
+  let f0_func, f0_a0, f0_a1, f0_cv;
+  if (arg.dorsal_type == 0){
+    f0_a0 = 0.2 + deviate(0.05);
+    f0_a1 = 0.3 + deviate(0.05);
+    f0_cv = 0;
+    f0_func = t=>(  (0.3+noise(t*3)*0.7)*arg.dorsal_length *Math.sin(t*PI)**0.5  );
+  }else if (arg.dorsal_type == 1){
+    f0_a0 = 0.6 + deviate(0.05);
+    f0_a1 = 0.3 + deviate(0.05);
+    f0_cv = arg.dorsal_length/8;
+    f0_func = t=>(  arg.dorsal_length* ((Math.pow(t-1,2))*0.5 + (1-t)*0.5)  );
+  }
+  let f0_curve,c0,f0;
+  if (arg.dorsal_texture_type == 0){
+    f0_curve = resample(curve0.slice(arg.dorsal_start,arg.dorsal_end),5);
+    ;[c0,f0] = fin_a(f0_curve,f0_a0,f0_a1,f0_func,false,f0_cv,0);
+  }else{
+    f0_curve = resample(curve0.slice(arg.dorsal_start,arg.dorsal_end),15);
+    ;[c0,f0] = fin_b(f0_curve,f0_a0,f0_a1,f0_func);
+  }
+  f0 = clip_multi(f0,trsl_poly(outline,0,0.001)).false;
+  
+  let f1_curve = [];
+  let f1_func, f1_a0, f1_a1, f1_soft, f1_cv;
+  let f1_pt = lerp2d(...curve0[arg.wing_start],...curve1[arg.wing_end],arg.wing_y);
+
+  for (let i = 0; i < 10; i++){
+    let t = i/9;
+    let y = lerp(f1_pt[1]-arg.wing_width/2,f1_pt[1]+arg.wing_width/2,t);
+    f1_curve.push([f1_pt[0] /*+ Math.sin(t*PI)*2*/,y]);
+  }
+  if (arg.wing_type == 0){
+    f1_a0 = -0.4 + deviate(0.05);
+    f1_a1 = 0.4 + deviate(0.05);
+    f1_soft = 10;
+    f1_cv = 0;
+    f1_func = t=>(  (40+(20+noise(t*3)*70)*Math.sin(t*PI)**0.5)/130*arg.wing_length  );
+  }else{
+    f1_a0 = 0 + deviate(0.05);
+    f1_a1 = 0.4 + deviate(0.05);
+    f1_soft = 5;
+    f1_cv = arg.wing_length/25;
+    f1_func = t=>(  arg.wing_length*(1-t*0.95)  ); 
+  }
+  
+  let c1,f1;
+  if (arg.wing_texture_type == 0){
+    f1_curve = resample(f1_curve,1.5);
+    ;[c1,f1] = fin_a(f1_curve,f1_a0,f1_a1,f1_func,1,f1_cv,0,f1_soft);
+  }else{
+    f1_curve = resample(f1_curve,4);
+    ;[c1,f1] = fin_b(f1_curve,f1_a0,f1_a1,f1_func,0.3);
+  }
+  bd = clip_multi(bd,c1).false;
+
+
+  let f2_curve;
+  let f2_func, f2_a0, f2_a1;
+  if (arg.pelvic_type == 0){
+    f2_a0 = -0.8 + deviate(0.05);;
+    f2_a1 = -0.5 + deviate(0.05);;
+    f2_func = t=>(  (10+(15+noise(t*3)*60)*Math.sin(t*PI)**0.5)/85*arg.pelvic_length  );
+  }else{
+    f2_a0 = -0.9 + deviate(0.05);;
+    f2_a1 = -0.3 + deviate(0.05);;
+    f2_func = t=>( (t*0.5+0.5)*arg.pelvic_length  );
+  }
+  let c2,f2;
+  if (arg.pelvic_texture_type == 0){
+    f2_curve = resample(curve1.slice(arg.pelvic_start,arg.pelvic_end).reverse(),arg.pelvic_type?2:5);
+    ;[c2,f2] = fin_a(f2_curve,f2_a0,f2_a1,f2_func);
+  }else{
+    f2_curve = resample(curve1.slice(arg.pelvic_start,arg.pelvic_end).reverse(),arg.pelvic_type?2:15);
+    ;[c2,f2] = fin_b(f2_curve,f2_a0,f2_a1,f2_func);
+  }
+  f2 = clip_multi(f2,c1).false;
+
+  let f3_curve;
+  let f3_func, f3_a0, f3_a1;
+  if (arg.anal_type == 0){
+    f3_a0 = -0.4 + deviate(0.05);;
+    f3_a1 = -0.4 + deviate(0.05);;
+    f3_func = t=>(  (10+(10+noise(t*3)*30)*Math.sin(t*PI)**0.5)/50*arg.anal_length  );
+  }else{
+    f3_a0 = -0.4 + deviate(0.05);;
+    f3_a1 = -0.4 + deviate(0.05);;
+    f3_func = t=>(  arg.anal_length* (t*t*0.8+0.2)  );
+  }
+  let c3,f3;
+  if (arg.anal_texture_type == 0){
+    f3_curve = resample(curve1.slice(arg.anal_start,arg.anal_end).reverse(),5);
+    ;[c3,f3] = fin_a(f3_curve,f3_a0,f3_a1,f3_func);
+  }else{
+    f3_curve = resample(curve1.slice(arg.anal_start,arg.anal_end).reverse(),15);
+    ;[c3,f3] = fin_b(f3_curve,f3_a0,f3_a1,f3_func);
+  }
+  f3 = clip_multi(f3,c1).false;
+
+  let f4_curve, c4, f4;
+  let f4_r = dist(...curve0[curve0.length-2],...curve1[curve1.length-2]);
+  let f4_n = ~~(f4_r/1.5);
+  f4_n = Math.max(Math.min(f4_n,20),8);
+  let f4_d = f4_r/f4_n;
+  // console.log(f4_n,f4_d);
+  if (arg.tail_type == 0){
+    f4_curve = [curve0[curve0.length-1], curve1[curve1.length-1]];
+    f4_curve = resample(f4_curve,f4_d);
+    ;[c4,f4] = fin_a(f4_curve,-0.6,0.6,t=>(  (75-(10+noise(t*3)*10)*Math.sin(3*t*PI-PI))/75*arg.tail_length  ),1);  
+  }else if (arg.tail_type == 1){
+    f4_curve = [curve0[curve0.length-2], curve1[curve1.length-2]];
+    f4_curve = resample(f4_curve,f4_d);
+    ;[c4,f4] = fin_a(f4_curve,-0.6,0.6,t=>( arg.tail_length*(Math.sin(t*PI)*0.5+0.5)  ),1); 
+  }else if (arg.tail_type == 2){
+    f4_curve = [curve0[curve0.length-1], curve1[curve1.length-1]];
+    f4_curve = resample(f4_curve,f4_d*0.7);
+    let cv = arg.tail_length/8;
+    ;[c4,f4] = fin_a(f4_curve,-0.6,0.6,t=>(  (Math.abs(Math.cos(PI*t))*0.8+0.2)*arg.tail_length  ),1,cv,-cv);  
+  }else if (arg.tail_type == 3){
+    f4_curve = [curve0[curve0.length-2], curve1[curve1.length-2]];
+    f4_curve = resample(f4_curve,f4_d);
+    ;[c4,f4] = fin_a(f4_curve,-0.6,0.6,t=>(  (1-Math.sin(t*PI)*0.3)*arg.tail_length  ),1);  
+  }else if (arg.tail_type == 4){
+    f4_curve = [curve0[curve0.length-2], curve1[curve1.length-2]];
+    f4_curve = resample(f4_curve,f4_d);
+    ;[c4,f4] = fin_a(f4_curve,-0.6,0.6,t=>(  (1-Math.sin(t*PI)*0.6)*(1-t*0.45)*arg.tail_length  ),1);  
+  }else if (arg.tail_type == 5){
+    f4_curve = [curve0[curve0.length-2], curve1[curve1.length-2]];
+    f4_curve = resample(f4_curve,f4_d);
+    ;[c4,f4] = fin_a(f4_curve,-0.6,0.6,t=>(  (1-Math.sin(t*PI)**0.4*0.55)*arg.tail_length  ),1);
+  }
+  // f4 = clip_multi(f4,trsl_poly(outline,-1,0)).false;
+  bd = clip_multi(bd,trsl_poly(c4,1,0)).false;
+
+  f4 = clip_multi(f4,c1).false;
+
+  let f5_curve,c5,f5=[];
+  if (arg.finlet_type == 0){
+    //pass
+  }else if (arg.finlet_type == 1){
+    f5_curve = resample(curve0.slice(arg.dorsal_end,-2),5);
+    ;[c5,f5] = finlet(f5_curve,5);
+    f5_curve = resample(curve1.slice(arg.anal_end,-2).reverse(),5);
+    if (f5_curve.length>1){
+      ;[c5,f5] = finlet(f5_curve,5);
+    }
+  }else if (arg.finlet_type == 2){
+    f5_curve = resample(curve0.slice(27,30),5);
+    ;[c5,f5] = fin_adipose(f5_curve,20,-5,6);
+    outline = poly_union(outline,trsl_poly(c5,0,-1));
+  }else{
+    f5_curve = resample(curve0.slice(arg.dorsal_end+2,-3),5);
+    if (f5_curve.length>2){
+      ;[c5,f5] = fin_a(f5_curve,0.2,0.3, t=>(  (0.3+noise(t*3)*0.7)*arg.dorsal_length*0.6 *Math.sin(t*PI)**0.5  ));
+    }
+    
+  }
+  let cf,fh;
+  if (arg.neck_type == 0){
+    ;[cf,fh] = fish_head(50-arg.head_length,150+arg.nose_height,...curve0[6],...curve1[5],arg);
+  }else{
+    ;[cf,fh] = fish_head(50-arg.head_length,150+arg.nose_height,...curve0[5],...curve1[6],arg);
+  }
+  bd = clip_multi(bd,cf).false;
+  
+  sh = clip_multi(sh,cf).false;
+  sh = clip_multi(sh,c1).false;
+
+  f1 = clip_multi(f1,cf).false;
+
+  f0 = clip_multi(f0,c1).false;
+
+  let sh2 = [];
+  if (pattern_func){
+    if (arg.scale_type > 1){
+      sh2 = patternshade_shape( poly_union(outline,trsl_poly(c0,0,3)  ),3.5,pattern_func);
+    }else{
+      sh2 = patternshade_shape( c0,4.5,pattern_func);
+    }
+    sh2 = clip_multi(sh2,cf).false;
+    sh2 = clip_multi(sh2,c1).false;
+  }
+
+  let sh3 = [];
+  if (arg.pattern_type == 4){
+    sh3 = smalldot_shape( poly_union(outline,trsl_poly(c0,0,5)  ), arg.pattern_scale);
+    sh3 = clip_multi(sh3,c1).false;
+    sh3 = clip_multi(sh3,cf).false;
+  }
+
+  return bd.
+  concat(f0).
+  concat(f1).
+  concat(f2).
+  concat(f3).
+  concat(f4).
+  concat(f5).
+  concat(fh).
+  concat(sh).
+  concat(sh2).
+  concat(sh3).
+  // concat([cf]).
+  concat();
+}
+
+function reframe(polylines,pad=20,text=null){
+  
+  let W = (500-pad*2);
+  let H = (300-pad*2) - (text?10:0);
+  let bbox = get_bbox(polylines.flat());
+  let sw = W/bbox.w;
+  let sh = H/bbox.h;
+  let s = Math.min(sw,sh);
+  let px = (W-bbox.w*s)/2;
+  let py = (H-bbox.h*s)/2;
+  for (let i = 0; i < polylines.length; i++){
+    for (let j = 0; j < polylines[i].length; j++){
+      let [x,y] = polylines[i][j];
+      x = (x - bbox.x) * s + px+pad;
+      y = (y - bbox.y) * s + py+pad;
+      polylines[i][j] = [x,y];
+    }
+  }
+  let [tw,tp] = put_text(text);
+  tp = tp.map(p=>scl_poly(shr_poly(p,-0.3),0.3,0.3));
+  tw *= 0.3;
+  polylines.push(...tp.map(p=>trsl_poly(p,250-tw/2,300-pad+5)));
+  return polylines;
+}
+
+function cleanup(polylines){
+  for (let i = polylines.length-1; i>=0; i--){
+    polylines[i] = approx_poly_dp(polylines[i],0.1);
+    for (let j = 0; j < polylines[i].length; j++){
+      for (let k = 0; k < polylines[i][j].length; k++){
+        polylines[i][j][k] = ~~(polylines[i][j][k]*10000)/10000;
+      }
+    }
+    if (polylines[i].length < 2){
+      polylines.splice(i,1);
+      continue;
+    }
+    if (polylines[i].length == 2){
+      if (dist(...polylines[0],...polylines[1])<0.9){
+        polylines.splice(i,1);
+        continue;
+      }
+    }
+  }
+  return polylines;
+}
+
+function default_params(){
+  return {
+    body_curve_type:0,
+    body_curve_amount:0.85,
+    body_length:350,
+    body_height:90,
+    scale_type:1,
+    scale_scale:1,
+    pattern_type:3,
+    pattern_scale:1,
+    dorsal_texture_type:1,
+    dorsal_type:0,
+    dorsal_length:100,
+    dorsal_start:8,
+    dorsal_end:27,
+    wing_texture_type:0,
+    wing_type:0,
+    wing_start:6,
+    wing_end:6,
+    wing_y:0.7,
+    wing_length:130,
+    wing_width:10,
+    pelvic_start:9,
+    pelvic_end:14,
+    pelvic_length:85,
+    pelvic_type:0,
+    pelvic_texture_type:0,
+    anal_start:19,
+    anal_end:29,
+    anal_length:50,
+    anal_type:0,
+    anal_texture_type:0,
+    tail_type:0,
+    tail_length:75,
+    finlet_type:0,
+    neck_type:0,
+    nose_height:0,
+    mouth_size:8,
+    head_length:30,
+    head_texture_amount:60,
+    has_moustache:1,
+    moustache_length:10,
+    has_beard:0,
+    has_teeth:1,
+    teeth_length:8,
+    teeth_space:3.5,
+    beard_length:30,
+    eye_type:1,
+    eye_size:10,
+    jaw_size:1,
+    jaw_open:1,
+  }
+}
+
+function choice(opts,percs){
+  if (!percs){
+    percs = opts.map(x=>1);
+  }
+  let s = 0;
+  for (let i = 0; i < percs.length; i++){
+    s += percs[i];
+  }
+  let r = rand()*s;
+  s = 0;
+  for (let i = 0; i < percs.length; i++){
+    s += percs[i];
+    if (r <= s){
+      return opts[i];
+    }
+  }
+}
+
+function rndtri(a,b,c){
+  let s0 = (b-a)/2;
+  let s1 = (c-b)/2;
+  let s = s0 + s1;
+  let r = rand()*s;
+  if (r < s0){
+    //d * d/(b-a) / 2 = r;
+    let d = Math.sqrt(2*r*(b-a));
+    return a + d;
+  }
+  //d * d/(c-b) / 2 = s-r;
+  let d = Math.sqrt(2*(s-r)*(c-b));
+  return c-d;
+}
+
+function generate_params(){
+
+  let arg = default_params();
+  arg.body_curve_type =   choice([0,1]);
+  arg.body_curve_amount = rndtri(0.5,0.85,0.98);
+  arg.body_length = rndtri(200,350,420);
+  arg.body_height = rndtri(45,90,150);
+  arg.scale_type = choice([0,1,2,3]);
+  arg.scale_scale = rndtri(0.8,1,1.5);
+  arg.pattern_type = choice([0,1,2,3,4]);
+  arg.pattern_scale = rndtri(0.5,1,2);
+  arg.dorsal_texture_type = choice([0,1]);
+  arg.dorsal_type = choice([0,1]);
+  arg.dorsal_length = rndtri(30,90,180);
+  if (arg.dorsal_type == 0){
+    arg.dorsal_start = ~~rndtri(7,8,15);
+    arg.dorsal_end   = ~~rndtri(20,27,28);
+  }else{
+    arg.dorsal_start = ~~rndtri(11,12,16);
+    arg.dorsal_end   = ~~rndtri(19,21,24);
+  }
+  arg.wing_texture_type = choice([0,1]);
+  arg.wing_type = choice([0,1]);
+  if (arg.wing_type == 0){
+    arg.wing_length = rndtri(40,130,200);
+  }else{
+    arg.wing_length = rndtri(40,150,350);
+  }
+  if (arg.wing_texture_type == 0){
+    arg.wing_width = rndtri(7,10,20);
+    arg.wing_y = rndtri(0.45,0.7,0.85);
+  }else{
+    arg.wing_width = rndtri(20,30,50);
+    arg.wing_y = rndtri(0.45,0.65,0.75);
+  }
+  
+  arg.wing_start = ~~rndtri(5,6,8);
+  arg.wing_end = ~~rndtri(5,6,8);
+
+  arg.pelvic_texture_type = arg.dorsal_texture_type ? choice([0,1]) : 0;
+  arg.pelvic_type = choice([0,1]);
+  arg.pelvic_length = rndtri(30,85,140);
+  if (arg.pelvic_type == 0){
+    arg.pelvic_start = ~~rndtri(7,9,11);
+    arg.pelvic_end = ~~rndtri(13,14,15);
+  }else{
+    arg.pelvic_start = ~~rndtri(7,9,12);
+    arg.pelvic_end = arg.pelvic_start+2;
+  }
+
+  arg.anal_texture_type = arg.dorsal_texture_type ? choice([0,1]) : 0;
+  arg.anal_type = choice([0,1]);
+  arg.anal_length = rndtri(20,50,80);
+  arg.anal_start = ~~rndtri(16,19,23);
+  arg.anal_end = ~~rndtri(25,29,31);
+
+  arg.tail_type = choice([0,1,2,3,4,5]);
+  arg.tail_length = rndtri(50,75,180);
+
+  arg.finlet_type = choice([0,1,2,3]);
+
+  arg.neck_type = choice([0,1]);
+  arg.nose_height = rndtri(-50,0,35);
+  arg.head_length = rndtri(20,30,35);
+  arg.mouth_size = ~~rndtri(6,8,11);
+
+  arg.head_texture_amount = ~~rndtri(30,60,160);
+  arg.has_moustache = choice([0,0,0,1]);
+  arg.has_beard = choice([0,0,0,0,0,1]);
+  arg.moustache_length = ~~rndtri(10,20,40);
+  arg.beard_length = ~~rndtri(20,30,50);
+
+  arg.eye_type = choice([0,1]);
+  arg.eye_size = rndtri(8,10,28)//arg.body_height/6//Math.min(arg.body_height/6,rndtri(8,10,30));
+
+  arg.jaw_size = rndtri(0.7,1,1.4);
+
+  arg.has_teeth = choice([0,1,1]);
+  arg.teeth_length = rndtri(5,8,15);
+  arg.teeth_space = rndtri(3,3.5,6);
+
+  return arg;
+}
+
+
+function binomen(){
+  let data =[["A","AB","AL","AN","AP","AR","AU","BA","BE","BO","BRA","CA","CAR","CENT","CHAE","CHAN","CHI","CHRO","CHRY","CO","CTE","CY","CYP","DE","E","EU","GA","GAS","GNA","GO","HE","HIP","HO","HY","LA","LAB","LE","LI","LO","LU","MAC","ME","MIC","MO","MU","MY","NA","NAN","NE","NO","O","ON","OP","OS","PA","PER","PHO","PI","PLA","PLEU","PO","PSEU","PTE","RA","RHI","RHOM","RU","SAL","SAR","SCA","SCOM","SE","SI","STE","TAU","TEL","THO","TRI","XE","XI"],
+  ["BE","BI","BO","BU","CA","CAM","CAN","CE","CENT","CHA","CHEI","CHI","CHO","CHY","CI","CIRR","CO","DI","DO","DON","DOP","GA","GAS","GO","HI","HYN","LA","LAB","LE","LEOT","LI","LICH","LIS","LO","LOS","LU","LY","MA","ME","MI","MICH","MO","MU","NA","NE","NEC","NI","NO","NOCH","NOP","NOS","PA","PE","PEN","PHA","PHI","PHO","PHY","PHYO","PI","PIP","PIS","PO","POG","POPH","RA","RAE","RAM","REOCH","RI","RICH","RIP","RIS","RO","ROI","ROP","ROS","RY","RYN","SE","SO","TA","TE","TEL","THAL","THE","THO","THOP","THU","TI","TICH","TO","TOG","TOP","TOS","VA","XI","XO"],
+  ["BIUS","BUS","CA","CHUS","CION","CON","CUS","DA","DES","DEUS","DON","DUS","GER","GON","GUS","HUS","LA","LEA","LIS","LIUS","LUS","MA","MIS","MUS","NA","NIA","NIO","NIUS","NOPS","NUS","PHEUS","PHIS","PIS","PUS","RA","RAS","RAX","RIA","RION","RIS","RUS","RYS","SA","SER","SIA","SIS","SUS","TER","TES","TEUS","THUS","THYS","TIA","TIS","TUS","TYS"],
+  ["A","AE","AL","AN","AR","AT","AU","AUST","AY","BA","BAR","BE","BI","BO","CA","CAL","CAM","CAN","CAR","CAU","CE","CHI","CHRY","COR","CRY","CU","CYA","DA","DE","DEN","DI","DIA","DO","DOR","DU","E","FA","FAS","FES","FI","FLO","FOR","FRE","FUR","GLA","GO","HA","HE","HIP","HO","HYP","I","IM","IN","JA","LA","LAB","LE","LEU","LI","LO","LU","MA","MAC","MAR","ME","MO","MOO","MOR","NA","NE","NI","NIG","NO","O","OR","PA","PAL","PE","PEC","PHO","PLA","PLU","PO","PRO","PU","PUL","RA","RE","RHOM","RI","RO","ROST","RU","SA","SAL","SE","SO","SPI","SPLEN","STRIA","TAU","THO","TRI","TY","U","UN","VA","VI","VIT","VUL","WAL","XAN"],
+  ["BA","BAR","BER","BI","BO","BOI","BU","CA","CAN","CAU","CE","CEL","CHA","CHEL","CHOP","CI","CIA","CIL","CIO","CO","COS","CU","DA","DE","DEL","DI","DIA","DO","FAS","FEL","FI","FOR","GA","GE","GI","HA","HYN","KE","LA","LAN","LE","LEA","LEU","LI","LIA","LO","LON","LOP","MA","ME","MEN","MI","MIE","MO","NA","NE","NEA","NEL","NEN","NI","NIF","NO","NOI","NOP","NU","PA","PE","PER","PHA","PHE","PI","PIN","PO","QUI","RA","RAC","RE","REN","RES","RI","RIA","RIEN","RIF","RO","ROR","ROS","ROST","RU","RYTH","SA","SE","SI","SO","SU","TA","TAE","TE","TER","THAL","THO","THU","TI","TIG","TO","TU","VA","VE","VES","VI","VIT","XEL","XI","ZO"],
+  ["BEUS","CA","CENS","CEPS","CEUS","CHA","CHUS","CI","CUS","DA","DAX","DENS","DES","DI","DIS","DUS","FER","GA","GI","GUS","KEI","KI","LA","LAS","LI","LIS","LIUS","LOR","LUM","LUS","MA","MIS","MUS","NA","NEUS","NI","NII","NIS","NIUS","NUS","PIS","PUS","RA","RE","RI","RIAE","RIE","RII","RIO","RIS","RIX","RONS","RU","RUM","RUS","SA","SEUS","SI","SIS","SUS","TA","TEUS","THUS","TI","TIS","TOR","TUM","TUS","TZI","ZI"]]
+  let freq =[[27,2,4,4,2,2,2,5,2,2,3,4,2,5,3,2,2,2,3,8,3,3,2,2,7,2,3,2,2,2,6,3,2,4,5,2,5,2,3,2,2,5,5,4,2,3,2,3,2,2,9,2,2,2,7,2,2,2,2,2,5,6,2,2,2,2,2,2,2,2,2,4,2,2,2,2,3,3,2,3],
+  [2,2,3,3,5,2,11,6,4,2,7,2,4,4,3,3,5,4,9,2,2,4,5,13,3,3,12,3,3,2,8,3,4,15,6,2,3,10,3,3,2,2,2,8,7,3,4,20,2,2,3,4,3,2,10,2,6,2,2,5,2,2,13,2,2,14,3,2,2,9,4,2,5,42,2,4,2,6,3,3,11,2,19,2,3,2,5,3,2,4,2,27,2,2,2,2,2,2],
+  [3,3,7,7,3,2,3,2,5,2,13,7,2,3,4,2,13,2,2,2,24,18,13,17,12,4,2,5,3,19,3,2,2,3,7,3,2,5,2,6,29,3,2,2,2,3,4,4,16,2,6,12,5,5,6,2],
+  [23,3,11,6,6,3,8,2,2,2,3,3,9,3,8,2,2,3,2,2,2,2,6,2,2,3,4,3,4,2,2,2,2,2,2,15,2,4,2,2,2,2,2,2,2,2,2,5,3,2,2,3,2,2,2,7,2,2,3,3,4,4,13,7,3,10,2,2,2,5,2,3,6,4,14,2,3,2,5,2,2,3,2,3,2,2,2,3,5,2,2,3,2,3,5,2,5,2,3,3,3,3,3,7,2,3,2,4,3,2,2,2,2],
+  [5,2,2,4,4,2,2,10,6,2,3,5,3,2,2,6,12,2,3,6,2,22,4,4,2,7,5,6,10,2,2,2,9,7,4,2,2,2,39,3,10,3,2,20,2,10,2,2,12,9,3,8,2,4,19,5,5,3,3,12,2,9,3,2,7,3,4,3,6,2,8,5,2,4,25,2,4,3,2,26,2,2,2,21,2,2,4,6,5,3,6,4,6,2,14,2,19,2,2,2,2,21,3,14,2,3,5,2,5,2,2,2,3],
+  [2,7,4,3,5,2,5,2,13,6,2,2,6,8,2,4,3,4,2,5,2,5,11,3,7,19,2,2,2,11,10,4,6,12,3,15,4,6,2,18,3,3,11,4,14,2,2,3,2,13,2,3,2,4,21,7,2,10,8,13,31,2,5,5,2,2,10,68,2,3]]
+    
+  let name = choice(data[0],freq[0]);
+  let n = ~~(rand()*3);
+  for (let i = 0; i < n; i++){
+    name += choice(data[1],freq[1]);
+  }
+  name += choice(data[2],freq[2]);
+  name += ' ';
+  name += choice(data[3],freq[3]);
+  n = ~~(rand()*3);
+  for (let i = 0; i < n; i++){
+    name += choice(data[4],freq[4]);
+  }
+  name += choice(data[5],freq[5]);
+  name = name.replace(/([A-Z])\1\1+/g,'$1$1');
+  return name[0]+name.slice(1).toLowerCase();
+}
+
+let hershey_raw = {
+"501":"  9I[RFJ[ RRFZ[ RMTWT",
+"502":" 24G\\KFK[ RKFTFWGXHYJYLXNWOTP RKPTPWQXRYTYWXYWZT[K[",
+"503":" 19H]ZKYIWGUFQFOGMILKKNKSLVMXOZQ[U[WZYXZV",
+"504":" 16G\\KFK[ RKFRFUGWIXKYNYSXVWXUZR[K[",
+"505":" 12H[LFL[ RLFYF RLPTP RL[Y[",
+"506":"  9HZLFL[ RLFYF RLPTP",
+"507":" 23H]ZKYIWGUFQFOGMILKKNKSLVMXOZQ[U[WZYXZVZS RUSZS",
+"508":"  9G]KFK[ RYFY[ RKPYP",
+"509":"  3NVRFR[",
+"510":" 11JZVFVVUYTZR[P[NZMYLVLT",
+"511":"  9G\\KFK[ RYFKT RPOY[",
+"512":"  6HYLFL[ RL[X[",
+"513":" 12F^JFJ[ RJFR[ RZFR[ RZFZ[",
+"514":"  9G]KFK[ RKFY[ RYFY[",
+"515":" 22G]PFNGLIKKJNJSKVLXNZP[T[VZXXYVZSZNYKXIVGTFPF",
+"516":" 14G\\KFK[ RKFTFWGXHYJYMXOWPTQKQ",
+"517":" 25G]PFNGLIKKJNJSKVLXNZP[T[VZXXYVZSZNYKXIVGTFPF RSWY]",
+"518":" 17G\\KFK[ RKFTFWGXHYJYLXNWOTPKP RRPY[",
+"519":" 21H\\YIWGTFPFMGKIKKLMMNOOUQWRXSYUYXWZT[P[MZKX",
+"520":"  6JZRFR[ RKFYF",
+"521":" 11G]KFKULXNZQ[S[VZXXYUYF",
+"522":"  6I[JFR[ RZFR[",
+"523":" 12F^HFM[ RRFM[ RRFW[ R\\FW[",
+"524":"  6H\\KFY[ RYFK[",
+"525":"  7I[JFRPR[ RZFRP",
+"526":"  9H\\YFK[ RKFYF RK[Y[",
+"601":" 18I\\XMX[ RXPVNTMQMONMPLSLUMXOZQ[T[VZXX",
+"602":" 18H[LFL[ RLPNNPMSMUNWPXSXUWXUZS[P[NZLX",
+"603":" 15I[XPVNTMQMONMPLSLUMXOZQ[T[VZXX",
+"604":" 18I\\XFX[ RXPVNTMQMONMPLSLUMXOZQ[T[VZXX",
+"605":" 18I[LSXSXQWOVNTMQMONMPLSLUMXOZQ[T[VZXX",
+"606":"  9MYWFUFSGRJR[ ROMVM",
+"607":" 23I\\XMX]W`VaTbQbOa RXPVNTMQMONMPLSLUMXOZQ[T[VZXX",
+"608":" 11I\\MFM[ RMQPNRMUMWNXQX[",
+"609":"  9NVQFRGSFREQF RRMR[",
+"610":" 12MWRFSGTFSERF RSMS^RaPbNb",
+"611":"  9IZMFM[ RWMMW RQSX[",
+"612":"  3NVRFR[",
+"613":" 19CaGMG[ RGQJNLMOMQNRQR[ RRQUNWMZM\\N]Q][",
+"614":" 11I\\MMM[ RMQPNRMUMWNXQX[",
+"615":" 18I\\QMONMPLSLUMXOZQ[T[VZXXYUYSXPVNTMQM",
+"616":" 18H[LMLb RLPNNPMSMUNWPXSXUWXUZS[P[NZLX",
+"617":" 18I\\XMXb RXPVNTMQMONMPLSLUMXOZQ[T[VZXX",
+"618":"  9KXOMO[ ROSPPRNTMWM",
+"619":" 18J[XPWNTMQMNNMPNRPSUTWUXWXXWZT[Q[NZMX",
+"620":"  9MYRFRWSZU[W[ ROMVM",
+"621":" 11I\\MMMWNZP[S[UZXW RXMX[",
+"622":"  6JZLMR[ RXMR[",
+"623":" 12G]JMN[ RRMN[ RRMV[ RZMV[",
+"624":"  6J[MMX[ RXMM[",
+"625":" 10JZLMR[ RXMR[P_NaLbKb",
+"626":"  9J[XMM[ RMMXM RM[X[",
+"710":"  6MWRYQZR[SZRY",
+};
+
+let hershey_cache = {};
+
+function compile_hershey(i){
+  if (hershey_cache[i]){
+    return hershey_cache[i];
+  }
+  var entry = hershey_raw[i];
+  if (entry == null){
+    return;
+  }
+  var ordR = 82;
+  var bound= entry.substring(3,5);
+  var xmin = bound.charCodeAt(0)-ordR;
+  var xmax = bound.charCodeAt(1)-ordR;
+  var content = entry.substring(5);
+  var polylines = [[]];
+  var j  = 0;
+  while (j < content.length){
+    var digit = content.substring(j,j+2);
+    if (digit == " R"){
+      polylines.push([]);
+    }else{
+      var x  = digit.charCodeAt(0)-ordR;
+      var y  = digit.charCodeAt(1)-ordR;
+      polylines[polylines.length-1].push([x,y]);
+    }
+    j+=2;
+  }
+  let data = {
+    xmin:xmin,
+    xmax:xmax,
+    polylines:polylines,
+  };
+  hershey_cache[i] = data;
+  return data;
+}
+
+function put_text(txt){
+  let base = 500;
+  let x = 0;
+  let o = [];
+  for (let i = 0; i < txt.length; i++){
+    let ord = txt.charCodeAt(i);
+    let idx;
+    if (65 <= ord && ord <= 90){
+      idx = base+1+(ord-65);
+    }else if (97 <= ord && ord <= 122){
+      idx = base + 101+(ord-97);
+    }else if (ord == 46){
+      idx = 710;
+    }else if (ord == 32){
+      x += 10;
+      continue;
+    }else{
+      continue;
+    }
+    let {xmin,xmax,polylines} = compile_hershey(idx);
+    polylines = polylines.map(p=>trsl_poly(p,x-xmin,0));
+    o.push(...polylines);
+    x += (xmax-xmin);
+  }
+  return [x,o];
+}
+
+function str_to_seed(str){
+  let n = 1;
+  for (let i = 0; i < str.length; i++){
+    let x = str.charCodeAt(i)+1;
+    n ^= x << (7+(i%5));
+    // if (i % 2){
+      n ^=(n<<17);
+      n ^=(n>>13);
+      n ^=(n<<5);
+    // }
+    n = (n>>>0) % 4294967295;
+  }
+  return n;
+}
+
+function main(seed){
+  if (seed === undefined){
+    jsr = ~~(Math.random()*10000);
+    let name = binomen();
+    seed = name;
+  }
+  jsr = str_to_seed(seed);
+  let drawing = fish(generate_params());
+  return (cleanup(reframe(drawing,20,seed+'.')));
+}
+
+
+if (typeof module != "undefined"){
+  module.exports = {main,generate_params,default_params,fish,reframe,cleanup,draw_svg,binomen,str_to_seed};
+  if (require.main === module) {
+    let seed = undefined;
+    let format = 'svg';
+    let speed = 0.005;
+    for (let i = 2; i < process.argv.length; i++){
+      let a = process.argv[i];
+      if (a == '--seed'){
+        seed = process.argv[i+1];
+      }else if (a == '--format'){
+        format = process.argv[i+1];
+      }else if (a == '--speed'){
+        if (process.argv[i+1] > 0)
+          speed = speed / process.argv[i+1];
+      }
+    }
+    let polylines = main(seed);
+    if (format == 'svg'){
+      console.log(draw_svg(polylines));
+    }else if (format == 'json'){
+      console.log(JSON.stringify(polylines));
+    }else if (format == 'smil'){
+      console.log(draw_svg_anim(polylines,speed));
+    }else if (format == 'csv'){
+      console.log(polylines.map(x=>x.flat().join(',')).join('\n'));
+    }else if (format == 'ps'){
+      console.log(draw_ps(polylines));
+    }
+  }
+}
+
+function fd_make(name){ perlin=null; jsr=str_to_seed(name)||1; __fd_eye=null; var a=generate_params(); var p=fish(a); return {polys:p, eye:__fd_eye, params:a}; }
+function fd_randomName(){ jsr=((Math.random()*4294967295)>>>0)||1; return binomen(); }
+
+</script>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"}}</script>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/controls/OrbitControls.js';
+
+const el = id => document.getElementById(id);
+const P = { name:'준우', stitches:40, puff:1, fur:0.24, dens:16, droop:0.35, yarn:0.18, tension:0.18, gravity:12, wind:0,
+  speed:40, playing:true, autoRotate:true, colors:['#f08a6c','#fbe3c8','#c9553f'],
+  env:'sea', caustic:1, sheen:0.2, lumpy:0, thin:1, mat:'fur' };
+const MATS={
+  fur:{name:'복실 퍼얀', yarnName:'퍼 얀(페이크 퍼) 또는 털이 긴 브러시 얀', fur:0.26,dens:15,droop:0.35,yarn:0.18,sheen:0.2,lumpy:0,thin:1},
+  mohair:{name:'모헤어', yarnName:'모헤어 실크 2겹 합사', fur:0.4,dens:9,droop:0.6,yarn:0.13,sheen:0.35,lumpy:0,thin:0.55},
+  chenille:{name:'셔닐 벨벳', yarnName:'셔닐(벨벳) 얀', fur:0.07,dens:30,droop:0,yarn:0.23,sheen:0.9,lumpy:0,thin:1},
+  boucle:{name:'부클레', yarnName:'부클레 얀', fur:0.09,dens:20,droop:0.1,yarn:0.2,sheen:0.1,lumpy:0.11,thin:1},
+  wool:{name:'울', yarnName:'울 중세사(워스티드)', fur:0.13,dens:20,droop:0.2,yarn:0.18,sheen:0.12,lumpy:0.02,thin:1},
+  cotton:{name:'면사', yarnName:'코튼 중세사', fur:0.015,dens:30,droop:0,yarn:0.16,sheen:0.04,lumpy:0,thin:1},
+};
+const NS=9, RS=6, SHELLS=9, LOOP_H=0.84, A=0.2, B=0.62, D=0.34;
+const PALETTES=[['#f08a6c','#fbe3c8','#c9553f'],['#5aa3c8','#f3efe2','#2f5f8a'],['#f2cf5b','#fff6d9','#d98a2b'],['#8fd1b9','#f6f1e3','#3f8f7a'],
+  ['#b9a7e0','#f4effa','#6d5aa8'],['#e2596b','#fde6e2','#8f2d45'],['#4a4f5c','#e8e4da','#c9a24a'],['#f6b39b','#fff0e6','#e07a5f']];
+const PALETTE_NAMES=['산호','바다','레몬','민트','라벤더','체리','먹','복숭아'];
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ---------- three ---------- */
+const canvas=el('c');
+const renderer=new THREE.WebGLRenderer({canvas,antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2)); renderer.toneMapping=THREE.ACESFilmicToneMapping; renderer.toneMappingExposure=1.15;
+const scene=new THREE.Scene(); const camera=new THREE.PerspectiveCamera(36,1,0.1,800);
+const controls=new OrbitControls(camera,canvas); controls.enableDamping=true; controls.autoRotateSpeed=0.9;
+const envStudio=new THREE.Group(), envSea=new THREE.Group(); scene.add(envStudio, envSea);
+envStudio.add(new THREE.HemisphereLight(0xfbf7ef,0x50524f,1.25));
+const key=new THREE.DirectionalLight(0xfff3e0,1.6); key.position.set(12,20,18); envStudio.add(key);
+const rim=new THREE.DirectionalLight(0xe4f0ff,0.9); rim.position.set(-16,8,-14); envStudio.add(rim);
+/* underwater: light from the surface, blue fill from the deep, caustics on everything lit */
+envSea.add(new THREE.HemisphereLight(0xcdeff2,0x0b3040,1.0));
+const sun=new THREE.DirectionalLight(0xfff6ea,2.3); sun.position.set(6,40,10); envSea.add(sun);
+const deepFill=new THREE.DirectionalLight(0x2a90b4,0.7); deepFill.position.set(-10,-4,14); envSea.add(deepFill);
+const seaFog=new THREE.FogExp2(0x0b4f63,0.0042);
+const causticU={uCTime:{value:0}, uCaustic:{value:1}};
+const CAUSTIC_COMMON=`uniform float uCTime,uCaustic; varying vec3 vCWorld;
+float caust(vec2 p,float t){ p+=0.6*vec2(sin(p.y*1.3+t),cos(p.x*1.1-t*0.8)); float a=abs(sin(p.x*2.1+t)+sin(p.y*2.3-t*1.2)+sin((p.x+p.y)*1.7+t*0.7)); return pow(max(0.0,1.0-a*0.5),4.0); }`;
+const CAUSTIC_FRAG=`{ vec3 wn=inverseTransformDirection(normal,viewMatrix); float upF=clamp(wn.y*0.75+0.35,0.0,1.0);
+  float cc=caust(vCWorld.xz*0.32,uCTime)+0.6*caust(vCWorld.xz*0.71+3.1,uCTime*1.3);
+  totalEmissiveRadiance += diffuseColor.rgb*uCaustic*cc*upF*0.6; }`;
+function causticVS(vs){ return vs.replace('#include <common>','#include <common>\nvarying vec3 vCWorld;')
+  .replace('#include <project_vertex>','#include <project_vertex>\nvCWorld=(modelMatrix*vec4(transformed,1.0)).xyz;'); }
+function withCaustics(mat){ mat.onBeforeCompile=sh=>{ Object.assign(sh.uniforms,causticU); sh.vertexShader=causticVS(sh.vertexShader);
+  sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\n'+CAUSTIC_COMMON)
+    .replace('#include <emissivemap_fragment>','#include <emissivemap_fragment>\n'+CAUSTIC_FRAG); }; return mat; }
+// water volume: gradient, sun glow and slow light shafts
+const dome=new THREE.Mesh(new THREE.SphereGeometry(420,48,24), new THREE.ShaderMaterial({side:THREE.BackSide, depthWrite:false, toneMapped:false,
+  uniforms:{uTime:causticU.uCTime},
+  vertexShader:`varying vec3 vDir; void main(){ vDir=normalize(position); gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }`,
+  fragmentShader:`uniform float uTime; varying vec3 vDir;
+    void main(){ float y=vDir.y; vec3 deep=vec3(0.008,0.07,0.12), mid=vec3(0.03,0.30,0.40), top=vec3(0.42,0.83,0.88);
+      vec3 col=mix(deep,mid,smoothstep(-0.55,0.15,y)); col=mix(col,top,smoothstep(0.15,0.95,y));
+      float sunG=pow(max(0.0,dot(vDir,normalize(vec3(0.15,1.0,0.25)))),30.0); col+=vec3(0.75,0.97,1.0)*sunG*0.7;
+      float ang=atan(vDir.x,vDir.z); float rays=pow(0.5+0.5*sin(ang*21.0+uTime*0.25)*sin(ang*6.0-uTime*0.17),6.0);
+      col+=vec3(0.25,0.55,0.6)*rays*smoothstep(-0.05,0.7,y)*0.4; gl_FragColor=vec4(col,1.0); }`}));
+envSea.add(dome);
+const floorGeo=new THREE.PlaneGeometry(700,700,160,160); floorGeo.rotateX(-Math.PI/2);
+{ const pa=floorGeo.attributes.position; for(let i=0;i<pa.count;i++){ const x=pa.getX(i), z=pa.getZ(i), r=Math.hypot(x,z);
+    const dune=Math.sin(x*0.11+Math.sin(z*0.05)*2)*0.5+Math.sin(z*0.07+x*0.03)*0.6; pa.setY(i, dune*Math.min(1,Math.max(0,(r-25)/40))*1.4 + (r>120?(r-120)*0.05:0)); }
+  floorGeo.computeVertexNormals(); }
+const floor=new THREE.Mesh(floorGeo, withCaustics(new THREE.MeshStandardMaterial({color:0xcdb78c, roughness:1}))); floor.position.y=-2.95; envSea.add(floor);
+const rockMat=withCaustics(new THREE.MeshStandardMaterial({color:0x5f7377, roughness:0.95, flatShading:true}));
+for(let k=0;k<14;k++){ const a=k/14*Math.PI*2+Math.sin(k*7.3), r=45+((k*37)%60), rk=new THREE.Mesh(new THREE.IcosahedronGeometry(1,1),rockMat);
+  rk.scale.set(2+(k%4)*1.3, 1.2+(k%3)*1.1, 2+((k*5)%4)); rk.position.set(Math.cos(a)*r-20, -2.6, Math.sin(a)*r-15); rk.rotation.set(k,k*2.1,k*0.7); envSea.add(rk); }
+// floating motes
+const MOTES=520, motePos=new Float32Array(MOTES*3); for(let i=0;i<MOTES;i++){ motePos[3*i]=-90+Math.random()*150; motePos[3*i+1]=-2+Math.random()*70; motePos[3*i+2]=-70+Math.random()*100; }
+const moteGeo=new THREE.BufferGeometry(); moteGeo.setAttribute('position',new THREE.BufferAttribute(motePos,3));
+const dotTex=(()=>{const cv=document.createElement('canvas');cv.width=cv.height=32;const g=cv.getContext('2d');const gr=g.createRadialGradient(16,16,0,16,16,16);gr.addColorStop(0,'rgba(255,255,255,1)');gr.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=gr;g.fillRect(0,0,32,32);return new THREE.CanvasTexture(cv);})();
+const motes=new THREE.Points(moteGeo,new THREE.PointsMaterial({size:0.45,map:dotTex,color:0xd5f6ff,transparent:true,opacity:0.55,depthWrite:false})); envSea.add(motes);
+// light shafts
+const shaftTex=(()=>{const cv=document.createElement('canvas');cv.width=64;cv.height=256;const g=cv.getContext('2d');
+  const v=g.createLinearGradient(0,0,0,256); v.addColorStop(0,'rgba(255,255,255,0.9)'); v.addColorStop(1,'rgba(255,255,255,0)'); g.fillStyle=v; g.fillRect(0,0,64,256);
+  g.globalCompositeOperation='destination-in'; const h=g.createLinearGradient(0,0,64,0); h.addColorStop(0,'rgba(0,0,0,0)'); h.addColorStop(0.5,'rgba(0,0,0,1)'); h.addColorStop(1,'rgba(0,0,0,0)'); g.fillStyle=h; g.fillRect(0,0,64,256);
+  return new THREE.CanvasTexture(cv);})();
+const shafts=[]; for(let k=0;k<8;k++){ const m=new THREE.Mesh(new THREE.PlaneGeometry(5+k%3*3,110), new THREE.MeshBasicMaterial({map:shaftTex,color:0xbff3ff,transparent:true,opacity:0.1,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide,fog:false}));
+  m.position.set(-75+k*17, 38, -35+(k%3)*9); m.rotation.z=0.22; m.userData.ph=k*1.7; envSea.add(m); shafts.push(m); }
+function animateSea(dt){ if(!envSea.visible) return;
+  for(let i=0;i<MOTES;i++){ motePos[3*i+1]+=dt*(0.25+(i%7)*0.06); motePos[3*i]+=Math.sin(time*0.4+i)*dt*0.15; if(motePos[3*i+1]>68) motePos[3*i+1]=-2; }
+  moteGeo.attributes.position.needsUpdate=true;
+  for(const m of shafts){ m.material.opacity=0.06+0.05*(0.5+0.5*Math.sin(time*0.35+m.userData.ph)); m.rotation.y=Math.atan2(camera.position.x-m.position.x, camera.position.z-m.position.z); } }
+function cssVar(n,fb){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim()||fb; }
+function applyTheme(){ if(P.env!=='sea'){ const c=new THREE.Color(cssVar('--stage','#10161a')); scene.background=c; scene.fog=new THREE.Fog(c,120,300); } drawChart(); if(!el('pattern').hidden) renderPattern(); }
+function setEnv(v){ P.env=v; envSea.visible=v==='sea'; envStudio.visible=v!=='sea'; shadow.visible=true;
+  if(v==='sea'){ scene.background=null; scene.fog=seaFog; causticU.uCaustic.value=P.caustic; renderer.toneMappingExposure=1.3; }
+  else { causticU.uCaustic.value=0; renderer.toneMappingExposure=1.15; applyTheme(); }
+  document.querySelector('.stage').classList.toggle('sea', v==='sea');
+  for(const b of el('envChips').children) b.setAttribute('aria-pressed', b.dataset.v===v); }
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',applyTheme);
+new MutationObserver(applyTheme).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+
+const shTex=(()=>{const cv=document.createElement('canvas');cv.width=cv.height=128;const g=cv.getContext('2d');
+  const gr=g.createRadialGradient(64,64,0,64,64,64);gr.addColorStop(0,'rgba(0,0,0,0.3)');gr.addColorStop(1,'rgba(0,0,0,0)');g.fillStyle=gr;g.fillRect(0,0,128,128);return new THREE.CanvasTexture(cv);})();
+const shadow=new THREE.Mesh(new THREE.PlaneGeometry(1,1),new THREE.MeshBasicMaterial({map:shTex,transparent:true,depthWrite:false}));
+shadow.rotation.x=-Math.PI/2; scene.add(shadow);
+
+const BALL_R=1.9;
+const ballTex=(()=>{const cv=document.createElement('canvas');cv.width=256;cv.height=128;const g=cv.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,256,128);
+  for(let k=0;k<80;k++){g.strokeStyle=`rgba(0,0,0,${0.06+Math.random()*0.12})`;g.lineWidth=1+Math.random()*2;g.beginPath();const y0=Math.random()*128,a=(Math.random()-.5)*1.6;g.moveTo(0,y0);g.lineTo(256,y0+a*256);g.stroke();}
+  const t=new THREE.CanvasTexture(cv);t.colorSpace=THREE.SRGBColorSpace;return t;})();
+const ballMat=withCaustics(new THREE.MeshStandardMaterial({map:ballTex,roughness:1}));
+const ball=new THREE.Mesh(new THREE.SphereGeometry(BALL_R,40,24),ballMat); scene.add(ball);
+const needleMat=withCaustics(new THREE.MeshStandardMaterial({color:0xc49a5c,roughness:0.45}));
+function makeNeedle(){const g=new THREE.Group();const b=new THREE.Mesh(new THREE.CylinderGeometry(0.12,0.12,10,12),needleMat);b.position.y=-5;
+  const t=new THREE.Mesh(new THREE.ConeGeometry(0.12,0.7,12),needleMat);t.position.y=0.35;g.add(b,t);return g;}
+const needleA=makeNeedle(), needleB=makeNeedle(); scene.add(needleA,needleB);
+const eyeMat=new THREE.MeshPhysicalMaterial({color:0x0b0d10,roughness:0.08,clearcoat:1,clearcoatRoughness:0.05});
+const eyeGeo=new THREE.SphereGeometry(1,32,20,0,Math.PI*2,0,Math.PI/2);
+const eyes=[new THREE.Mesh(eyeGeo,eyeMat),new THREE.Mesh(eyeGeo,eyeMat)]; eyes.forEach(e=>{e.visible=false;scene.add(e);});
+
+/* ---------- fishdraw → silhouette, ink, eye ---------- */
+let fishData=null, GW=0, GH=0, grid=null, cellCol=null, dist=null, dmax=1, eyeGrid=null, chains=[], fishBox=null;
+function hashStr(s){ let h=2166136261>>>0; for(const ch of s){ h^=ch.codePointAt(0); h=Math.imul(h,16777619)>>>0; } return h; }
+function makeFishData(name){
+  const r=fd_make(name); const pts=r.polys.flat();
+  let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9; for(const [x,y] of pts){ if(x<x0)x0=x; if(y<y0)y0=y; if(x>x1)x1=x; if(y>y1)y1=y; }
+  return {polys:r.polys, eye:r.eye, params:r.params, box:{x0,y0,w:x1-x0,h:y1-y0}};
+}
+function drawFishSvg(){
+  const {polys,box}=fishData, pad=10, s=Math.min((500-2*pad)/box.w,(300-2*pad)/box.h);
+  const ox=(500-box.w*s)/2, oy=(300-box.h*s)/2;
+  let d=''; for(const pl of polys){ d+='M'+pl.map(([x,y])=>((x-box.x0)*s+ox).toFixed(1)+' '+((y-box.y0)*s+oy).toFixed(1)).join('L'); }
+  el('fishSvg').innerHTML=`<path d="${d}"/>`;
+}
+function rasterize(){
+  const {polys,box}=fishData; const RW=640, sc=RW/box.w, RH=Math.max(8,Math.round(box.h*sc)), pad=6;
+  const W=RW+2*pad, H=RH+2*pad;
+  const tx=x=>(x-box.x0)*sc+pad, ty=y=>(y-box.y0)*sc+pad;
+  const draw=(lw)=>{ const cv=document.createElement('canvas'); cv.width=W; cv.height=H; const g=cv.getContext('2d');
+    g.fillStyle='#fff'; g.fillRect(0,0,W,H); g.strokeStyle='#000'; g.lineWidth=lw; g.lineCap='round'; g.lineJoin='round';
+    g.beginPath(); for(const pl of polys){ pl.forEach(([x,y],i)=>i?g.lineTo(tx(x),ty(y)):g.moveTo(tx(x),ty(y))); } g.stroke();
+    return g.getImageData(0,0,W,H).data; };
+  // silhouette: thick strokes close gaps, then flood fill the outside
+  const thick=draw(9), N=W*H, wall=new Uint8Array(N); for(let i=0;i<N;i++) wall[i]=thick[4*i]<128?1:0;
+  const out=new Uint8Array(N), q=new Int32Array(N); let qh=0,qt=0;
+  const push=i=>{ if(!out[i]&&!wall[i]){ out[i]=1; q[qt++]=i; } };
+  for(let x=0;x<W;x++){ push(x); push((H-1)*W+x); } for(let y=0;y<H;y++){ push(y*W); push(y*W+W-1); }
+  while(qh<qt){ const i=q[qh++], x=i%W; if(x>0)push(i-1); if(x<W-1)push(i+1); if(i>=W)push(i-W); if(i<N-W)push(i+W); }
+  const thin=draw(1.4);
+  return {W,H,pad,sc,out,thin};
+}
+function buildGrid(){
+  const R=rasterize(), {W,H,pad,out,thin}=R, box=fishData.box;
+  GW=P.stitches; GH=Math.max(6,Math.round(GW*(box.h/box.w)/LOOP_H));
+  grid=new Uint8Array(GW*GH); const ink=new Float32Array(GW*GH);
+  const cw=(W-2*pad)/GW, ch=(H-2*pad)/GH;
+  for(let r=0;r<GH;r++) for(let c=0;c<GW;c++){
+    const px0=pad+c*cw, py0=pad+(GH-1-r)*ch; let inside=0, dark=0, tot=0;
+    const sx=Math.max(1,Math.floor(cw/4)), sy=Math.max(1,Math.floor(ch/4));
+    for(let y=Math.floor(py0);y<py0+ch;y+=sy) for(let x=Math.floor(px0);x<px0+cw;x+=sx){ const i=y*W+x; tot++; if(!out[i]) inside++; if(thin[4*i]<140) dark++; }
+    grid[r*GW+c]= inside/tot>0.5 ? 1:0; ink[r*GW+c]=dark/tot;
+  }
+  for(let r=0;r<GH;r++){ let c=0; while(c<GW){ if(!grid[r*GW+c]){c++;continue;} let e=c; while(e+1<GW&&grid[r*GW+e+1]) e++; if(e-c<1) for(let k=c;k<=e;k++) grid[r*GW+k]=0; c=e+1; } }
+  makeKnittable();
+  // distance to the outside, in stitch widths (chamfer)
+  const INF=1e9, dd=Math.hypot(1,LOOP_H); dist=new Float32Array(GW*GH);
+  for(let i=0;i<GW*GH;i++) dist[i]=grid[i]?INF:0;
+  const at=(r,c)=> (r<0||c<0||r>=GH||c>=GW)?0:dist[r*GW+c];
+  for(let pass=0;pass<2;pass++){
+    for(let r=0;r<GH;r++) for(let c=0;c<GW;c++){ const i=r*GW+c; if(!grid[i]) continue;
+      dist[i]=Math.min(dist[i], at(r,c-1)+1, at(r-1,c)+LOOP_H, at(r-1,c-1)+dd, at(r-1,c+1)+dd); }
+    for(let r=GH-1;r>=0;r--) for(let c=GW-1;c>=0;c--){ const i=r*GW+c; if(!grid[i]) continue;
+      dist[i]=Math.min(dist[i], at(r,c+1)+1, at(r+1,c)+LOOP_H, at(r+1,c+1)+dd, at(r+1,c-1)+dd); }
+  }
+  dmax=1; for(const v of dist) if(v>dmax) dmax=v;
+  // eye in grid space
+  const [ex,ey,er]=fishData.eye||[box.x0+box.w*0.2,box.y0+box.h*0.45,10];
+  eyeGrid={x:(ex-box.x0)/box.w*GW, r:(1-(ey-box.y0)/box.h)*GH, rad:Math.max(0.7,er/box.w*GW*0.55)};
+  // colour each stitch: thin parts = fin, dense ink = pattern, else body
+  const inkVals=[]; for(let i=0;i<GW*GH;i++) if(grid[i]) inkVals.push(ink[i]); inkVals.sort((a,b)=>a-b);
+  const inkThr=Math.max(0.12, inkVals[Math.floor(inkVals.length*0.72)]||0.2);
+  cellCol=new Uint8Array(GW*GH); const finT=Math.max(1.8,dmax*0.3);
+  const localMax=(r,c)=>{ let m=0; for(let dr=-2;dr<=2;dr++) for(let dc=-2;dc<=2;dc++){ const rr=r+dr, cc=c+dc; if(rr>=0&&cc>=0&&rr<GH&&cc<GW) m=Math.max(m,dist[rr*GW+cc]); } return m; };
+  for(let r=0;r<GH;r++) for(let c=0;c<GW;c++){ const i=r*GW+c; if(!grid[i]) continue;
+    const nearEye=Math.hypot(c+0.5-eyeGrid.x,(r+0.5-eyeGrid.r)*LOOP_H)<eyeGrid.rad*1.6;
+    cellCol[i]= (localMax(r,c)<=finT && !nearEye) ? 2 : (ink[i]>=inkThr && !nearEye ? 1 : 0); }
+  chains=buildChains();
+}
+function buildChains(){
+  const runs=[], byRow=[];
+  for(let r=0;r<GH;r++){ byRow[r]=[]; let c=0; while(c<GW){ if(!grid[r*GW+c]){c++;continue;} let e=c; while(e+1<GW&&grid[r*GW+e+1]) e++;
+    const run={r,a:c,b:e,pred:[],succ:[],seen:false}; runs.push(run); byRow[r].push(run); c=e+1; } }
+  for(let r=0;r<GH-1;r++) for(const u of byRow[r]) for(const v of byRow[r+1]) if(u.a<=v.b&&v.a<=u.b){ u.succ.push(v); v.pred.push(u); }
+  const out=[]; for(const run of runs){ if(run.seen) continue; const ch=[]; let cur=run;
+    while(cur&&!cur.seen){ ch.push(cur); cur.seen=true; cur=(cur.succ.length===1&&cur.succ[0].pred.length===1)?cur.succ[0]:null; }
+    out.push(ch.map(({r,a,b})=>({r,a,b}))); }
+  return out;
+}
+function infl(x,y){ // stuffing height from distance-to-edge, bilinear on cell centres
+  const gx=x+GW/2-0.5, gr=y/LOOP_H; const c0=Math.floor(gx), r0=Math.floor(gr), fx=gx-c0, fy=gr-r0;
+  const g=(r,c)=>(r<0||c<0||r>=GH||c>=GW)?0:dist[r*GW+c];
+  const d=(g(r0,c0)*(1-fx)+g(r0,c0+1)*fx)*(1-fy)+(g(r0+1,c0)*(1-fx)+g(r0+1,c0+1)*fx)*fy;
+  // edge stitches (d≈1) stay flat so front and back meet at the seam
+  const de=Math.max(0,d-1.05), dn=Math.min(1,de/Math.max(0.6,dmax-1.05));
+  return dmax*0.7*P.puff*Math.sqrt(dn*(2-dn));
+}
+
+/* ---------- knit path: front panel, then mirrored back panel knitted beside it ---------- */
+let N=0, NF=0, Bx,By,Bz, T, side, inflA, rowOf, colOf, colIdx, restLen, bendKnit, bendFree, brk, nextBrk, pos, prv;
+let center=new THREE.Vector3(), ballPos=new THREE.Vector3(), OX=0, segAvg=0.2;
+function stitchSign(){ return -1; }
+function chainPathInto(pts,meta,brks,mirror){
+  const h=LOOP_H;
+  chains.forEach((ch,ci)=>{
+    if(pts.length) brks.push(pts.length/3-1);
+    ch.forEach((cr,k)=>{ const dir=k%2?-1:1;
+      for(let m=0;m<=cr.b-cr.a;m++){ const c=dir>0?cr.a+m:cr.b-m;
+        for(let j=0;j<NS;j++){ const t=2*Math.PI*j/NS, tau=t/(2*Math.PI)+A*Math.sin(2*t), X=dir>0?c+tau:c+1-tau;
+          let x=X-GW/2; if(mirror) x=-x; pts.push(x, h*(cr.r-B*Math.cos(t)), -D*Math.cos(2*t)); meta.push(cr.r,c); } }
+      if(k<ch.length-1){ const nx=ch[k+1], xe=dir>0?cr.b+1:cr.a, xs=dir>0?nx.b+1:nx.a;
+        for(let j=0;j<NS;j++){ const s=j/NS; let x=xe+(xs-xe)*s+dir*0.12*Math.sin(Math.PI*s)-GW/2; if(mirror) x=-x;
+          pts.push(x, h*(cr.r-B)+h*(nx.r-cr.r)*s, -D); meta.push(cr.r,-1); } }
+    });
+  });
+}
+function buildPath(){
+  const pts=[], meta=[], brks=[];
+  chainPathInto(pts,meta,brks,false); NF=pts.length/3; chainPathInto(pts,meta,brks,true);
+  N=pts.length/3; Bx=new Float32Array(N); By=new Float32Array(N); Bz=new Float32Array(N); side=new Uint8Array(N);
+  rowOf=new Int16Array(N); colOf=new Int16Array(N); colIdx=new Uint8Array(N); inflA=new Float32Array(N);
+  for(let i=0;i<N;i++){ Bx[i]=pts[3*i]; By[i]=pts[3*i+1]; Bz[i]=pts[3*i+2]; side[i]=i>=NF?1:0; rowOf[i]=meta[2*i]; colOf[i]=meta[2*i+1];
+    const c=colOf[i]>=0?colOf[i]:(i>0?colOf[i-1]:0); colOf[i]=colOf[i]; colIdx[i]=cellCol[rowOf[i]*GW+Math.max(0,c)]; }
+  for(let i=1;i<N;i++) if(meta[2*i+1]<0) colIdx[i]=colIdx[i-1];
+  brk=new Uint8Array(N); for(const b of brks) if(b>=0) brk[b]=1;
+  nextBrk=new Int32Array(N); let nb=N; for(let i=N-1;i>=0;i--){ if(brk[i]) nb=i; nextBrk[i]=nb; }
+  OX=-(GW+5);
+  T=new Float32Array(3*N); stage.assemble=0; stage.puff=0; updateTargets(); recomputeInfl();
+  restLen=new Float32Array(N); bendKnit=new Float32Array(N); bendFree=new Float32Array(N); let sum=0,cnt=0;
+  for(let i=0;i<N-1;i++){ const L=Math.hypot(Bx[i+1]-Bx[i],By[i+1]-By[i],Bz[i+1]-Bz[i]); restLen[i]=L; if(!brk[i]){sum+=L;cnt++;} }
+  segAvg=sum/Math.max(1,cnt);
+  for(let i=0;i<N-2;i++){ bendKnit[i]=Math.hypot(Bx[i+2]-Bx[i],By[i+2]-By[i],Bz[i+2]-Bz[i]); bendFree[i]=(restLen[i]+restLen[i+1])*0.985; }
+  const hTot=GH*LOOP_H; center.set(0,hTot*0.45,0);
+  ballPos.set(GW/2+5, -2.6+BALL_R, 5); ball.position.copy(ballPos);
+  shadow.position.set(OX/2, -2.6, 0); shadow.scale.setScalar((GW*2+12)*1.25);
+  pos=new Float32Array(3*N); prv=new Float32Array(3*N); buildGeometry();
+}
+function recomputeInfl(){ for(let i=0;i<N;i++){ const x=side[i]?-Bx[i]:Bx[i]; inflA[i]=infl(x,By[i]); } }
+const ease=t=>t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;
+function updateTargets(){
+  const ea=ease(stage.assemble), th=Math.PI*ea, c=Math.cos(th), s=Math.sin(th), ox=OX*(1-ea), zs=-Math.sin(th)*GW*0.6, pf=stage.puff;
+  for(let i=0;i<N;i++){ const a=3*i;
+    if(!side[i]){ T[a]=Bx[i]; T[a+1]=By[i]; T[a+2]=Bz[i]+0.12+pf*inflA[i]; }
+    else { const xl=Bx[i], zl=Bz[i]+0.12; T[a]=xl*c+zl*s+ox; T[a+1]=By[i]; T[a+2]=-xl*s+zl*c+zs-pf*inflA[i]; } }
+}
+
+/* ---------- fluffy yarn: tube + fur shells ---------- */
+let geo=null; const meshes=[];
+const furUniforms={ uLen:{value:P.fur}, uDens:{value:P.dens}, uDroop:{value:P.droop}, uTime:{value:0}, uSheen:{value:P.sheen}, uLumpy:{value:P.lumpy}, uThin:{value:P.thin} };
+function furMaterial(level){
+  const m=new THREE.MeshStandardMaterial({vertexColors:true, roughness:1});
+  m.onBeforeCompile=sh=>{
+    Object.assign(sh.uniforms, furUniforms, causticU, {uShell:{value:level}});
+    sh.vertexShader=sh.vertexShader.replace('#include <common>',`#include <common>
+      attribute vec2 fuzz; uniform float uShell,uLen,uDroop,uTime,uLumpy; varying vec2 vFuzz; varying float vShell; varying vec3 vCWorld;`)
+      .replace('#include <begin_vertex>',`#include <begin_vertex>
+      vFuzz=fuzz; vShell=uShell;
+      transformed += normal*uLumpy*(0.6*sin(fuzz.x*2.3)+0.4*sin(fuzz.x*5.7+1.3)+0.35);
+      transformed += normal*uShell*uLen;
+      transformed.y -= uShell*uShell*uLen*uDroop*1.4;
+      transformed.x += uShell*uShell*uLen*0.25*sin(uTime*1.3+fuzz.x*0.7);`)
+      .replace('#include <project_vertex>','#include <project_vertex>\nvCWorld=(modelMatrix*vec4(transformed,1.0)).xyz;');
+    sh.fragmentShader=sh.fragmentShader.replace('#include <common>',`#include <common>
+      uniform float uDens,uSheen,uThin; varying vec2 vFuzz; varying float vShell;
+      `+CAUSTIC_COMMON+`
+      float h21(vec2 p){ p=fract(p*vec2(123.34,456.21)); p+=dot(p,p+45.32); return fract(p.x*p.y); }`)
+      .replace('#include <color_fragment>',`#include <color_fragment>
+      if(vShell>0.001){
+        vec2 g=vFuzz*vec2(uDens, uDens*0.55);
+        vec2 cell=floor(g), f=fract(g)-0.5;
+        float r=h21(cell), r2=h21(cell+17.3);
+        f+=vec2(r2-0.5,r-0.5)*0.5*vShell;              // strands lean and wander
+        float rad=mix(0.48,0.1,vShell)*(0.55+0.6*r)*mix(1.0,uThin,vShell);
+        if(length(f)>rad || r<vShell*0.92) discard;
+      }
+      diffuseColor.rgb*=mix(0.82,1.1,vShell);`)
+      .replace('#include <emissivemap_fragment>',`#include <emissivemap_fragment>
+      totalEmissiveRadiance += diffuseColor.rgb*uSheen*pow(1.0-abs(dot(normal,normalize(vViewPosition))),3.0)*0.8;
+      `+CAUSTIC_FRAG);
+  };
+  m.customProgramCacheKey=()=>'fur'+level.toFixed(3);
+  return m;
+}
+const furMats=Array.from({length:SHELLS},(_,k)=>furMaterial(k/(SHELLS-1)));
+function buildGeometry(){
+  for(const m of meshes) scene.remove(m); meshes.length=0; if(geo) geo.dispose();
+  geo=new THREE.BufferGeometry();
+  geo.setAttribute('position',new THREE.BufferAttribute(new Float32Array(N*RS*3),3).setUsage(THREE.DynamicDrawUsage));
+  geo.setAttribute('normal',new THREE.BufferAttribute(new Float32Array(N*RS*3),3).setUsage(THREE.DynamicDrawUsage));
+  geo.setAttribute('color',new THREE.BufferAttribute(new Float32Array(N*RS*3),3));
+  const fz=new Float32Array(N*RS*2); for(let i=0;i<N;i++) for(let j=0;j<RS;j++){ fz[2*(i*RS+j)]=i*0.22; fz[2*(i*RS+j)+1]=j/RS*1.6; }
+  geo.setAttribute('fuzz',new THREE.BufferAttribute(fz,2));
+  const idx=new Uint32Array((N-1)*RS*6); let o=0;
+  for(let i=0;i<N-1;i++) for(let j=0;j<RS;j++){ const a=i*RS+j, b=i*RS+(j+1)%RS, c=a+RS, d=b+RS;
+    if(brk[i]){ for(let q=0;q<6;q++) idx[o++]=a; continue; } idx[o++]=a; idx[o++]=c; idx[o++]=b; idx[o++]=b; idx[o++]=c; idx[o++]=d; }
+  geo.setIndex(new THREE.BufferAttribute(idx,1));
+  for(const m of furMats){ const mesh=new THREE.Mesh(geo,m); mesh.frustumCulled=false; scene.add(mesh); meshes.push(mesh); }
+  paintColors();
+}
+let cols=P.colors.map(c=>new THREE.Color(c));
+function paintColors(){ cols=P.colors.map(c=>new THREE.Color(c)); const col=geo.attributes.color.array;
+  for(let i=0;i<N;i++){ const b=cols[colIdx[i]]; for(let j=0;j<RS;j++){ const a=2*Math.PI*j/RS, sh=0.86+0.14*Math.sin(2*a+i*1.55), o=3*(i*RS+j);
+    col[o]=b.r*sh; col[o+1]=b.g*sh; col[o+2]=b.b*sh; } }
+  geo.attributes.color.needsUpdate=true; drawChart(); }
+function updateTube(E){
+  const P3=geo.attributes.position.array, N3=geo.attributes.normal.array, r=P.yarn; let nx=0,ny=1,nz=0;
+  for(let i=0;i<E;i++){
+    const ia=(i>0&&!brk[i-1])?i-1:i, ib=(i<E-1&&!brk[i])?i+1:i, a=3*ia, b=3*ib;
+    let tx=pos[b]-pos[a], ty=pos[b+1]-pos[a+1], tz=pos[b+2]-pos[a+2]; const tl=Math.hypot(tx,ty,tz)||1; tx/=tl; ty/=tl; tz/=tl;
+    const d=nx*tx+ny*ty+nz*tz; nx-=tx*d; ny-=ty*d; nz-=tz*d; let nl=Math.hypot(nx,ny,nz);
+    if(nl<1e-4){ if(Math.abs(ty)<0.9){nx=-tz;ny=0;nz=tx;} else {nx=0;ny=tz;nz=-ty;} nl=Math.hypot(nx,ny,nz); }
+    nx/=nl; ny/=nl; nz/=nl; const bx=ty*nz-tz*ny, by=tz*nx-tx*nz, bz=tx*ny-ty*nx, px=pos[3*i], py=pos[3*i+1], pz=pos[3*i+2];
+    for(let j=0;j<RS;j++){ const ang=2*Math.PI*j/RS, ca=Math.cos(ang), sa=Math.sin(ang), dx=nx*ca+bx*sa, dy=ny*ca+by*sa, dz=nz*ca+bz*sa, o=3*(i*RS+j);
+      P3[o]=px+dx*r; P3[o+1]=py+dy*r; P3[o+2]=pz+dz*r; N3[o]=dx; N3[o+1]=dy; N3[o+2]=dz; } }
+  geo.attributes.position.needsUpdate=true; geo.attributes.normal.needsUpdate=true; geo.setDrawRange(0,Math.max(0,E-1)*RS*6);
+}
+
+/* ---------- seam: trace the silhouette and whipstitch front to back ---------- */
+let seamGeo=null; const seamMeshes=[]; let SN=0, seamPts=null, seamTan=null;
+function traceContours(){
+  const v=(r,c)=>(r<0||c<0||r>=GH||c>=GW)?0:grid[r*GW+c];
+  const segs=[];
+  for(let r=-1;r<GH;r++) for(let c=-1;c<GW;c++){
+    const a=v(r,c), b=v(r,c+1), C=v(r+1,c+1), d=v(r+1,c), k=a|b<<1|C<<2|d<<3;
+    if(k===0||k===15) continue;
+    const B_=[c+0.5,r], R_=[c+1,r+0.5], T_=[c+0.5,r+1], L_=[c,r+0.5];
+    const tbl={1:[[L_,B_]],2:[[B_,R_]],3:[[L_,R_]],4:[[R_,T_]],5:[[L_,T_],[B_,R_]],6:[[B_,T_]],7:[[L_,T_]],8:[[T_,L_]],
+      9:[[T_,B_]],10:[[B_,L_],[T_,R_]],11:[[T_,R_]],12:[[R_,L_]],13:[[R_,B_]],14:[[B_,L_]]};
+    for(const s of tbl[k]) segs.push(s);
+  }
+  const key=p=>Math.round(p[0]*2)+','+Math.round(p[1]*2), adj=new Map();
+  segs.forEach((s,i)=>{ for(const p of s){ const kk=key(p); if(!adj.has(kk)) adj.set(kk,[]); adj.get(kk).push(i); } });
+  const used=new Uint8Array(segs.length), loops=[];
+  for(let i=0;i<segs.length;i++){ if(used[i]) continue; used[i]=1; const loop=[segs[i][0],segs[i][1]];
+    for(let guard=0;guard<segs.length;guard++){ const end=loop[loop.length-1]; const nxt=(adj.get(key(end))||[]).find(j=>!used[j]); if(nxt===undefined) break;
+      used[nxt]=1; const s=segs[nxt]; loop.push(key(s[0])===key(end)?s[1]:s[0]); }
+    if(loop.length>8) loops.push(loop.map(([cx,cy])=>[cx+0.5-GW/2, LOOP_H*cy])); }
+  return loops;
+}
+function chaikin(pts){ const o=[]; for(let i=0;i<pts.length;i++){ const a=pts[i], b=pts[(i+1)%pts.length];
+  o.push([a[0]*0.75+b[0]*0.25,a[1]*0.75+b[1]*0.25],[a[0]*0.25+b[0]*0.75,a[1]*0.25+b[1]*0.75]); } return o; }
+function insideAt(x,y){ const c=Math.floor(x+GW/2), r=Math.round(y/LOOP_H); return r>=0&&c>=0&&r<GH&&c<GW&&grid[r*GW+c]; }
+function buildSeam(){
+  const loops=traceContours().map(l=>chaikin(chaikin(l)));
+  const pts=[], br=[], tan=[]; const pitch=0.95, rc=0.36+P.yarn, step=0.085;
+  for(const L of loops){
+    // resample by arc length
+    const n=L.length, cum=[0]; for(let i=1;i<=n;i++){ const a=L[i-1], b=L[i%n]; cum.push(cum[i-1]+Math.hypot(b[0]-a[0],b[1]-a[1])); }
+    const len=cum[n]; if(len<4) continue; const cnt=Math.floor(len/step);
+    // which side is outward for this loop (majority vote)
+    let vote=0; for(let k=0;k<n;k+=Math.max(1,Math.floor(n/24))){ const a=L[k], b=L[(k+1)%n], tx=b[0]-a[0], ty=b[1]-a[1], tl=Math.hypot(tx,ty)||1;
+      vote += insideAt(a[0]+ty/tl*0.7, a[1]-tx/tl*0.7) ? -1 : 1; }
+    const sgn=vote>=0?1:-1;
+    if(pts.length) br.push(pts.length/3-1);
+    let j=0;
+    for(let k=0;k<=cnt;k++){ const s=k*step; while(j<n-1&&cum[j+1]<s) j++;
+      const a=L[j], b=L[(j+1)%n], f=(s-cum[j])/((cum[j+1]-cum[j])||1), x=a[0]+(b[0]-a[0])*f, y=a[1]+(b[1]-a[1])*f;
+      const tx=b[0]-a[0], ty=b[1]-a[1], tl=Math.hypot(tx,ty)||1, nx=ty/tl*sgn, ny=-tx/tl*sgn;
+      const ph=2*Math.PI*s/pitch, rr=rc*Math.cos(ph)-0.08;
+      pts.push(x+nx*rr, y+ny*rr, rc*1.25*Math.sin(ph)); tan.push(tx/tl,ty/tl); }
+  }
+  SN=pts.length/3; seamPts=new Float32Array(pts); seamTan=new Float32Array(tan);
+  for(const m of seamMeshes) scene.remove(m); seamMeshes.length=0; if(seamGeo) seamGeo.dispose();
+  seamGeo=new THREE.BufferGeometry(); if(SN<2) return;
+  const sb=new Uint8Array(SN); for(const b of br) sb[b]=1;
+  const P3=new Float32Array(SN*RS*3), N3=new Float32Array(SN*RS*3), C3=new Float32Array(SN*RS*3), fz=new Float32Array(SN*RS*2), r=P.yarn*0.85;
+  let nx=0,ny=0,nz=1;
+  for(let i=0;i<SN;i++){
+    const ia=(i>0&&!sb[i-1])?i-1:i, ib=(i<SN-1&&!sb[i])?i+1:i, a=3*ia, b=3*ib;
+    let tx=seamPts[b]-seamPts[a], ty=seamPts[b+1]-seamPts[a+1], tz=seamPts[b+2]-seamPts[a+2]; const tl=Math.hypot(tx,ty,tz)||1; tx/=tl; ty/=tl; tz/=tl;
+    const d=nx*tx+ny*ty+nz*tz; nx-=tx*d; ny-=ty*d; nz-=tz*d; let nl=Math.hypot(nx,ny,nz); if(nl<1e-4){ nx=-ty; ny=tx; nz=0; nl=Math.hypot(nx,ny)||1; }
+    nx/=nl; ny/=nl; nz/=nl; const bx=ty*nz-tz*ny, by=tz*nx-tx*nz, bz=tx*ny-ty*nx;
+    for(let q=0;q<RS;q++){ const ang=2*Math.PI*q/RS, ca=Math.cos(ang), sa=Math.sin(ang), dx=nx*ca+bx*sa, dy=ny*ca+by*sa, dz=nz*ca+bz*sa, o=3*(i*RS+q);
+      P3[o]=seamPts[3*i]+dx*r; P3[o+1]=seamPts[3*i+1]+dy*r; P3[o+2]=seamPts[3*i+2]+dz*r; N3[o]=dx; N3[o+1]=dy; N3[o+2]=dz;
+      fz[2*(i*RS+q)]=i*0.22; fz[2*(i*RS+q)+1]=q/RS*1.6; } }
+  seamGeo.setAttribute('position',new THREE.BufferAttribute(P3,3)); seamGeo.setAttribute('normal',new THREE.BufferAttribute(N3,3));
+  seamGeo.setAttribute('color',new THREE.BufferAttribute(C3,3)); seamGeo.setAttribute('fuzz',new THREE.BufferAttribute(fz,2));
+  const idx=new Uint32Array((SN-1)*RS*6); let o=0;
+  for(let i=0;i<SN-1;i++) for(let q=0;q<RS;q++){ const a=i*RS+q, b=i*RS+(q+1)%RS, c=a+RS, d=b+RS;
+    if(sb[i]){ for(let z=0;z<6;z++) idx[o++]=a; continue; } idx[o++]=a; idx[o++]=c; idx[o++]=b; idx[o++]=b; idx[o++]=c; idx[o++]=d; }
+  seamGeo.setIndex(new THREE.BufferAttribute(idx,1)); seamGeo.setDrawRange(0,0);
+  for(const m of furMats){ const mesh=new THREE.Mesh(seamGeo,m); mesh.frustumCulled=false; scene.add(mesh); seamMeshes.push(mesh); }
+  paintSeam();
+}
+function paintSeam(){ if(!seamGeo||SN<2) return; const c=new THREE.Color(P.colors[2]), C3=seamGeo.attributes.color.array;
+  for(let i=0;i<SN;i++) for(let q=0;q<RS;q++){ const o=3*(i*RS+q), sh=0.85+0.15*Math.sin(2*Math.PI*q/RS*2+i*1.3); C3[o]=c.r*sh; C3[o+1]=c.g*sh; C3[o+2]=c.b*sh; }
+  seamGeo.attributes.color.needsUpdate=true; }
+function showSeam(){ if(!seamGeo||SN<2) return; const k=Math.floor(stage.seam*(SN-1)); seamGeo.setDrawRange(0,k*RS*6);
+  for(const m of seamMeshes) m.visible=stage.seam>0; }
+
+/* ---------- rod dynamics (Verlet nodes + length/bending constraints) ---------- */
+const stage={phase:'front', assemble:0, puff:0, seam:0, t:0};
+let p=0, lastE=0, time=0, ballSpin=0, freeLen=60, endPinned=true;
+const needle=new THREE.Vector3(), bt=new THREE.Vector3();
+function needleAt(pp){ const i0=Math.min(N-1,Math.floor(pp)), i1=(i0<N-1&&!brk[i0])?i0+1:i0, f=pp-i0;
+  needle.set(T[3*i0]+(T[3*i1]-T[3*i0])*f, T[3*i0+1]+(T[3*i1+1]-T[3*i0+1])*f+0.25, T[3*i0+2]+(T[3*i1+2]-T[3*i0+2])*f); }
+function ballTop(){ bt.copy(needle).sub(ballPos).normalize().multiplyScalar(BALL_R*0.92).add(ballPos); }
+function windowEnd(i0){ const nb=nextBrk[i0], byLen=i0+Math.max(4,Math.round(freeLen));
+  if(nb<N&&nb+1<=byLen){ endPinned=false; return nb+1; } endPinned=byLen<N; return Math.min(N,byLen); }
+function layFree(from,to,i0){ const span=Math.max(1,to-1-i0), dd=needle.distanceTo(bt);
+  for(let i=from;i<to;i++){ const s=(i-i0)/span; pos[3*i]=prv[3*i]=needle.x+(bt.x-needle.x)*s;
+    pos[3*i+1]=prv[3*i+1]=needle.y+(bt.y-needle.y)*s-Math.sin(Math.PI*s)*dd*0.25; pos[3*i+2]=prv[3*i+2]=needle.z+(bt.z-needle.z)*s; } }
+function setKnitPhase(){ stage.phase = p>=N-1 ? stage.phase : (p<NF ? 'front':'back'); }
+function initState(pp, finished){
+  p=Math.max(0,Math.min(N-1,pp));
+  if(finished){ stage.phase='done'; stage.assemble=1; stage.puff=1; stage.seam=1; } else { stage.assemble=0; stage.puff=0; stage.seam=0; stage.phase=p<NF?'front':'back'; }
+  updateTargets(); const i0=Math.floor(p);
+  for(let i=0;i<i0*3;i++){ pos[i]=prv[i]=T[i]; }
+  if(finished){ for(let i=0;i<3*N;i++) pos[i]=prv[i]=T[i]; lastE=N; endPinned=false; return; }
+  needleAt(p); ballTop(); freeLen=Math.ceil(needle.distanceTo(bt)*1.12/segAvg)+3;
+  const E=windowEnd(i0); layFree(i0,E,i0); lastE=E;
+}
+function relax(i,j,rest,wi,wj,k){ const a=3*i,b=3*j, dx=pos[b]-pos[a], dy=pos[b+1]-pos[a+1], dz=pos[b+2]-pos[a+2];
+  const L=Math.hypot(dx,dy,dz); if(L<1e-6) return; const w=wi+wj; if(!w) return; const c=(L-rest)/(L*w)*k;
+  pos[a]+=dx*c*wi; pos[a+1]+=dy*c*wi; pos[a+2]+=dz*c*wi; pos[b]-=dx*c*wj; pos[b+1]-=dy*c*wj; pos[b+2]-=dz*c*wj; }
+function pin(i,v){ const a=3*i; pos[a]=prv[a]=v.x; pos[a+1]=prv[a+1]=v.y; pos[a+2]=prv[a+2]=v.z; }
+function step(dt){
+  const knitting = stage.phase==='front'||stage.phase==='back';
+  if(knitting && P.playing){ p+=P.speed*NS*dt; if(p>=N-1){ p=N-1; stage.phase='sew'; stage.t=0; } else stage.phase=p<NF?'front':'back'; }
+  if(!knitting && P.playing){
+    stage.t+=dt;
+    if(stage.phase==='sew'){ stage.assemble=Math.min(1,stage.t/2.2); stage.seam=Math.max(0,Math.min(1,(stage.t-2.2)/4.0)); if(stage.seam>=1){ stage.phase='stuff'; stage.t=0; } }
+    else if(stage.phase==='stuff'){ stage.puff=Math.min(1,stage.t/2.0); if(stage.puff>=1){ stage.phase='done'; } }
+    if(stage.phase!=='done' || stage.t<0.2) updateTargets();
+  }
+  const i0=Math.floor(p), done=p>=N-1;
+  let E=N, fixedEnd=-1, holdIdx=-1;
+  if(!done){
+    needleAt(p); ballTop(); holdIdx=i0;
+    const want=Math.ceil(needle.distanceTo(bt)*1.12/segAvg)+3; freeLen+=Math.max(-2,Math.min(2,want-freeLen)); if(Math.abs(want-freeLen)>40) freeLen=want;
+    E=windowEnd(i0); if(E-lastE>3) layFree(Math.max(lastE,i0),E,i0); else for(let i=lastE;i<E;i++) pin(i,bt);
+    lastE=E; fixedEnd=endPinned?E-1:-1;
+  } else { E=N; lastE=N; }
+  const sub=3, h=dt/sub, damp=1-0.035, g=done?P.gravity*0.25:P.gravity, settle=NS*2.5, kb=done?0.08:0.18;
+  const kt=done?Math.max(P.tension,0.35):P.tension, held=done?N:i0;
+  for(let s=0;s<sub;s++){ time+=h;
+    for(let i=0;i<E;i++){ const a=3*i; const vx=(pos[a]-prv[a])*damp, vy=(pos[a+1]-prv[a+1])*damp, vz=(pos[a+2]-prv[a+2])*damp;
+      prv[a]=pos[a]; prv[a+1]=pos[a+1]; prv[a+2]=pos[a+2]; let ax=0,az=0;
+      if(P.wind>0){ ax=P.wind*(0.55+0.45*Math.sin(time*1.7+pos[a+1]*0.35)); az=P.wind*0.45*Math.cos(time*1.1+pos[a]*0.3); }
+      pos[a]+=vx+ax*h*h; pos[a+1]+=vy-g*h*h; pos[a+2]+=vz+az*h*h; }
+    for(let i=0;i<held;i++){ const a=3*i, k=done?kt:kt*Math.min(1,Math.max(0.05,(p-i)/settle));
+      pos[a]+=(T[a]-pos[a])*k; pos[a+1]+=(T[a+1]-pos[a+1])*k; pos[a+2]+=(T[a+2]-pos[a+2])*k; }
+    for(let it=0;it<(done?3:5);it++){
+      if(holdIdx>=0) pin(holdIdx,needle); if(fixedEnd>=0) pin(fixedEnd,bt);
+      for(let i=0;i<E-1;i++){ if(brk[i]) continue; const wi=(i===holdIdx||i===fixedEnd)?0:1, wj=(i+1===holdIdx||i+1===fixedEnd)?0:1;
+        relax(i,i+1,restLen[i],wi,wj,1);
+        if(i<E-2&&!brk[i+1]){ const wk=(i+2===holdIdx||i+2===fixedEnd)?0:1; relax(i,i+2,i+2<=held?bendKnit[i]:bendFree[i],wi,wk,kb); } }
+    }
+  }
+  return E;
+}
+
+/* ---------- props, HUD, chart ---------- */
+const qa=new THREE.Quaternion(), up=new THREE.Vector3(0,1,0), tv=new THREE.Vector3(), out=new THREE.Vector3(0,0,1);
+function props(dt){
+  const knitting=p<N-1, i0=Math.min(N-1,Math.floor(p)), j=Math.min(N-1,i0+NS);
+  needleA.visible=needleB.visible=knitting;
+  const sewing=stage.phase==='sew'&&stage.seam>0&&stage.seam<1&&SN>1;
+  if(sewing){ const k=Math.min(SN-1,Math.floor(stage.seam*(SN-1))); needleA.visible=true;
+    tv.set(seamTan[2*k],seamTan[2*k+1],0).normalize(); needleA.position.set(seamPts[3*k],seamPts[3*k+1],seamPts[3*k+2]);
+    qa.setFromUnitVectors(up, tv.clone().multiplyScalar(-1).addScaledVector(out,0.5).normalize()); needleA.quaternion.copy(qa); }
+  if(knitting){ tv.set(T[3*j]-T[3*i0],0,T[3*j+2]-T[3*i0+2]); if(tv.lengthSq()<1e-6) tv.set(1,0,0); tv.normalize();
+    const bob=Math.sin(time*9)*0.12*(P.playing?1:0);
+    const dA=tv.clone().negate().addScaledVector(out,0.35).addScaledVector(up,0.25).normalize();
+    needleA.position.copy(needle).addScaledVector(out,0.15+bob); qa.setFromUnitVectors(up,dA.negate()); needleA.quaternion.copy(qa);
+    const dB=tv.clone().addScaledVector(out,0.6).addScaledVector(up,0.55).normalize();
+    needleB.position.copy(needle).addScaledVector(out,0.25-bob); qa.setFromUnitVectors(up,dB.negate()); needleB.quaternion.copy(qa); }
+  ballSpin+=(knitting&&P.playing?P.speed*0.1:0)*dt; ball.rotation.set(ballSpin*0.6,ballSpin,0);
+  ballMat.color.copy(cols[colIdx[i0]]);
+  const ballTarget = knitting?1:0; ball.scale.setScalar(THREE.MathUtils.lerp(ball.scale.x, Math.max(0.001,ballTarget), 0.08));
+  // safety eyes pop in once stuffed
+  const ePop=stage.phase==='done'?1:(stage.phase==='stuff'?Math.max(0,(stage.puff-0.6)/0.4):0);
+  const ex=eyeGrid.x-GW/2, ey=LOOP_H*(eyeGrid.r-0.5), ez=0.12+stage.puff*infl(ex,ey)+P.fur*0.4+0.15, rr=eyeGrid.rad*ePop;
+  eyes.forEach((e,k)=>{ e.visible=ePop>0.01; e.scale.setScalar(Math.max(0.001,rr)); e.position.set(ex,ey,k?-ez:ez); e.rotation.set(k?-Math.PI/2:Math.PI/2,0,0); });
+  // camera target follows the work
+  const tx = stage.phase==='front' ? 0 : stage.phase==='back' ? OX : OX*(1-ease(stage.assemble))*0.5;
+  if(follow){ const want=new THREE.Vector3(tx, center.y-1, 0), dl=want.sub(controls.target).multiplyScalar(0.05);
+    controls.target.add(dl); camera.position.add(dl); }
+  controls.autoRotate = P.autoRotate && stage.phase==='done' && !reduceMotion;
+}
+const PH=['front','back','sew','stuff','done'];
+function hud(){
+  const k=PH.indexOf(stage.phase); for(const s of el('phase').children){ const j=PH.indexOf(s.dataset.p); s.className = j===k?'on':(j<k?'ok':''); }
+  const i0=Math.min(N-1,Math.floor(p)); let st=0, tot=0; for(const v of grid) tot+=v; tot*=2;
+  st = Math.min(tot, Math.round(i0/NS)); el('rSt').textContent=st; el('rStT').textContent=tot;
+  let L=0; for(let i=0;i<i0;i++) if(!brk[i]) L+=restLen[i]; const cm=10/20; el('rYarn').textContent=(L*cm/100).toFixed(1);
+  el('rSize').textContent=`${(GW*cm).toFixed(0)}×${(GH*LOOP_H*cm).toFixed(0)} cm`;
+  el('progress').value=Math.round(p/(N-1)*1000); el('oProgress').textContent=Math.round(p/(N-1)*100)+'%';
+  el('bPlay').textContent=P.playing?'일시정지':'재생';
+  drawChart();
+}
+function drawChart(){
+  const cv=el('chart'); if(!cv||!grid) return; const g=cv.getContext('2d');
+  const cell=Math.max(2,Math.floor(320/GW)); cv.width=GW*cell; cv.height=GH*cell; g.clearRect(0,0,cv.width,cv.height);
+  const done=new Uint8Array(GW*GH); const i0=Math.min(Math.floor(p),NF); for(let i=0;i<i0;i+=3) if(colOf[i]>=0) done[rowOf[i]*GW+colOf[i]]=1;
+  const bg=cssVar('--line','#ddd');
+  for(let r=0;r<GH;r++) for(let c=0;c<GW;c++){ const i=r*GW+c; if(!grid[i]) continue;
+    g.globalAlpha = done[i]||p>=NF ? 1 : 0.35; g.fillStyle=P.colors[cellCol[i]];
+    g.fillRect(c*cell,(GH-1-r)*cell,cell-(cell>3?1:0),cell-(cell>3?1:0)); }
+  g.globalAlpha=1; g.fillStyle=cssVar('--fg','#000');
+  const ex=eyeGrid.x*cell, ey=(GH-eyeGrid.r)*cell; g.beginPath(); g.arc(ex,ey,Math.max(2,eyeGrid.rad*cell*0.8),0,Math.PI*2); g.fill();
+}
+function frame(){ follow=true; const d=GW*1.55+14, tx=p<NF?0:(p<N-1?OX:0); camera.position.set(tx+d*0.28, center.y+d*0.2, d*0.94); controls.target.set(tx,center.y-1,0); controls.update(); }
+
+/* ---------- knitting pattern: chart + written instructions ----------
+   Rules applied (flat knitting, stockinette):
+   · chart starts bottom-right; odd rows = right side (RS), read right→left; even rows = wrong side (WS), read left→right
+   · one square = one stitch; colour areas are worked in intarsia (own strand per area, twist yarns at each change)
+   · multi-stitch shaping: cast on at either end, but bind off only at the START of a row — a deeper cut at the row end
+     is spread so that it lands at the start of the next row (the doll is rebuilt from the same corrected grid). */
+function rowHas(r){ for(let c=0;c<GW;c++) if(grid[r*GW+c]) return true; return false; }
+function makeKnittable(){
+  let rb=0; while(rb<GH && !rowHas(rb)) rb++;
+  for(let iter=0;iter<40;iter++){
+    let changed=false;
+    for(const ch of buildChains()) for(let k=1;k<ch.length;k++){
+      const pr=ch[k-1], cr=ch[k], rs=((cr.r-rb+1)%2===1);
+      if(rs){ if(cr.a-pr.a>=2 && !grid[cr.r*GW+pr.a]){ for(let c=pr.a+1;c<cr.a;c++) grid[cr.r*GW+c]=1; changed=true; } }   // RS row ends at the left edge
+      else  { if(pr.b-cr.b>=2 && !grid[cr.r*GW+pr.b]){ for(let c=cr.b+1;c<pr.b;c++) grid[cr.r*GW+c]=1; changed=true; } }   // WS row ends at the right edge
+    }
+    if(!changed) break;
+  }
+}
+const CL='ABC', CNAME=['몸통','무늬','지느러미'];
+function shapeTxt(d, at, rs){
+  if(d===0) return '';
+  if(d===1) return at==='start' ? '첫 코를 뜬 뒤 1코 늘림(M1)' : '마지막 코 전에 1코 늘림(M1)';
+  if(d>1)  return at==='start' ? `뜨기 전에 케이블 코잡기로 ${d}코 늘림` : `단 끝에서 감아코로 ${d}코 늘림`;
+  if(d===-1) return at==='start' ? (rs?'처음 2코 오른코 겹치기(ssk)':'처음 2코 안뜨기 오른코 겹치기(ssp)') : (rs?'마지막 2코 왼코 겹치기(k2tog)':'마지막 2코 안뜨기 2코 모아뜨기(p2tog)');
+  return at==='start' ? `처음 ${-d}코 코막음` : `단 끝에서 ${-d}코를 2코 모아뜨기로 나눠 줄임`;
+}
+let PAT=null;
+function computePattern(){
+  const chs=chains; let rb=GH, rt=0, minA=GW, maxB=0;
+  for(const ch of chs){ rb=Math.min(rb,ch[0].r); rt=Math.max(rt,ch[ch.length-1].r); for(const cr of ch){ minA=Math.min(minA,cr.a); maxB=Math.max(maxB,cr.b); } }
+  const colNum=c=>maxB-c+1, grNum=r=>r-rb+1, rsOf=r=>grNum(r)%2===1;
+  const first=chs.map(c=>c[0]), last=chs.map(c=>c[c.length-1]), idx=chs.map((_,i)=>i);
+  const ov=(u,v)=>u.a<=v.b&&v.a<=u.b;
+  const preds=idx.map(i=>idx.filter(j=>j!==i&&last[j].r===first[i].r-1&&ov(last[j],first[i])));
+  const succs=idx.map(i=>idx.filter(j=>j!==i&&first[j].r===last[i].r+1&&ov(first[j],last[i])));
+  const marks=new Map(), mark=(r,c,s)=>marks.set(r*GW+c,s), issues=[];
+  const pieces=chs.map((ch,pi)=>{
+    const f=ch[0], pc={no:pi+1, rows:[], from:grNum(f.r), to:grNum(ch[ch.length-1].r), bobbins:1};
+    let pa, pb, castOn=false;
+    if(!preds[pi].length){ castOn=true; pc.start=`${f.b-f.a+1}코를 ${CL[cellCol[f.r*GW+(rsOf(f.r)?f.b:f.a)]]}색 실로 코잡기 합니다.`; pa=f.a; pb=f.b; }
+    else if(preds[pi].length===1){ const q=last[preds[pi][0]], a=Math.max(q.a,f.a), b=Math.min(q.b,f.b);
+      pc.start=`조각 ${preds[pi][0]+1}에서 남겨 둔 코 중 차트 ${colNum(b)}~${colNum(a)}번째 ${b-a+1}코에 새 실을 걸어 이어 뜹니다.`; pa=a; pb=b; }
+    else { const qs=preds[pi].map(j=>last[j]).sort((x,y)=>x.a-y.a); let gaps=0;
+      for(let k=1;k<qs.length;k++) for(let c=qs[k-1].b+1;c<qs[k].a;c++){ gaps++; mark(f.r,c,'co'); }
+      pc.start=`조각 ${preds[pi].map(j=>j+1).join(', ')}의 코를 왼쪽부터 순서대로 한 바늘에 모읍니다.`+(gaps?` 사이에 비는 ${gaps}코는 첫 단에서 그 자리에 감아코로 만들어 잇습니다.`:'');
+      pa=Math.max(qs[0].a,f.a); pb=Math.min(qs[qs.length-1].b,f.b); }
+    ch.forEach((cr,k)=>{
+      const gr=grNum(cr.r), rs=gr%2===1; let sT='', eT='';
+      if(!(k===0&&castOn)){
+        const dR=cr.b-pb, dL=pa-cr.a, sD=rs?dR:dL, eD=rs?dL:dR;
+        sT=shapeTxt(sD,'start',rs); eT=shapeTxt(eD,'end',rs);
+        if(dR>0) for(let c=pb+1;c<=cr.b;c++) mark(cr.r,c,'inc'); if(dL>0) for(let c=cr.a;c<pa;c++) mark(cr.r,c,'inc');
+        if(dR===-1) mark(cr.r,cr.b,rs?'ssk':'k2tog'); if(dL===-1) mark(cr.r,cr.a,rs?'k2tog':'ssk');
+        if(dR<-1) for(let c=cr.b+1;c<=pb;c++) mark(cr.r,c,'bo'); if(dL<-1) for(let c=pa;c<cr.a;c++) mark(cr.r,c,'bo');
+        if(eD<-1) issues.push(`${gr}단: 단 끝에서 ${-eD}코 줄임이 남았습니다(이웃 조각과 붙어 있어 자동 보정하지 못함).`);
+      }
+      const runs=[]; const seq=[]; if(rs) for(let c=cr.b;c>=cr.a;c--) seq.push(c); else for(let c=cr.a;c<=cr.b;c++) seq.push(c);
+      for(const c of seq){ const ci=cellCol[cr.r*GW+c]; if(runs.length&&runs[runs.length-1].c===ci) runs[runs.length-1].n++; else runs.push({c:ci,n:1}); }
+      const areas=runs.length; if(areas>pc.bobbins) pc.bobbins=areas;
+      if(cr.b-cr.a+1<2) issues.push(`${gr}단: 1코짜리 단이 있습니다.`);
+      pc.rows.push({gr, rs, n:cr.b-cr.a+1, sT, eT, runs});
+      pa=cr.a; pb=cr.b;
+    });
+    const s=succs[pi], lr=last[pi], n=lr.b-lr.a+1;
+    if(!s.length) pc.end=`남은 ${n}코를 모두 코막음합니다.`;
+    else if(s.length===1&&preds[s[0]].length>1) pc.end=`실을 끊고 ${n}코를 홀더(쉼코 핀)에 옮겨 둡니다. 조각 ${s[0]+1}에서 합칩니다.`;
+    else { const cov=new Uint8Array(GW);
+      const parts=s.map(j=>{ const fj=first[j], a=Math.max(lr.a,fj.a), b=Math.min(lr.b,fj.b); for(let c=a;c<=b;c++) cov[c]=1; return `조각 ${j+1}: 차트 ${colNum(b)}~${colNum(a)}번째 ${b-a+1}코`; });
+      let bo=0; for(let c=lr.a;c<=lr.b;c++) if(!cov[c]){ bo++; mark(lr.r+1,c,'bo'); }
+      pc.end=`여기서 코가 갈라집니다 — ${parts.join(', ')}.`+(bo?` 어느 조각에도 이어지지 않는 ${bo}코는 다음 단 시작에서 코막음합니다.`:'')+` 지금 뜨지 않는 쪽 코는 홀더에 옮겨 둡니다.`; }
+    return pc;
+  });
+  // materials from the simulated rod: yarn length per colour, both panels + seam
+  const cm=0.5, perCol=[0,0,0]; let stitches=[0,0,0];
+  for(let i=0;i<N-1;i++) if(!brk[i]) perCol[colIdx[i]]+=restLen[i];
+  for(let i=0;i<GW*GH;i++) if(grid[i]) stitches[cellCol[i]]++;
+  let seamLen=0; for(let i=0;i<SN-1;i++) seamLen+=Math.hypot(seamPts[3*i+3]-seamPts[3*i],seamPts[3*i+4]-seamPts[3*i+1],seamPts[3*i+5]-seamPts[3*i+2]);
+  perCol[2]+=seamLen;
+  const meters=perCol.map(u=>Math.max(5,Math.ceil(u*cm/100*1.15/5)*5));
+  const rowsTot=rt-rb+1, er=Math.round(eyeGrid.r-0.5), ec=Math.floor(eyeGrid.x);
+  return {pieces, issues, marks, rb, rt, minA, maxB, colNum, grNum, meters, stitches, rowsTot,
+    widthCm:(maxB-minA+1)*cm, heightCm:rowsTot*LOOP_H*cm, eye:{gr:grNum(er), col:colNum(ec), r:er, c:ec, mm:Math.round(Math.min(18,Math.max(6,eyeGrid.rad*2*cm*10)))}};
+}
+function lum(hex){ const c=new THREE.Color(hex); return 0.299*c.r+0.587*c.g+0.114*c.b; }
+function drawPatternChart(cv){
+  const pt=PAT, cw=16, chh=Math.round(16*LOOP_H), L=34, Rm=34, T0=12, Bm=28, cols=pt.maxB-pt.minA+1, rows=pt.rowsTot;
+  const W=L+cols*cw+Rm, H=T0+rows*chh+Bm, dpr=Math.min(2,devicePixelRatio||1);
+  cv.width=W*dpr; cv.height=H*dpr; cv.style.width=W+'px'; cv.style.height=H+'px';
+  const g=cv.getContext('2d'); g.setTransform(dpr,0,0,dpr,0,0); g.clearRect(0,0,W,H);
+  const fg=cssVar('--fg','#111'), mut=cssVar('--muted','#666'), line=cssVar('--line','#ccc'), bg=cssVar('--panel','#fff');
+  const X=c=>L+(c-pt.minA)*cw, Y=r=>T0+(pt.rt-r)*chh;
+  g.fillStyle=bg; g.fillRect(L,T0,cols*cw,rows*chh);
+  for(let r=pt.rb;r<=pt.rt;r++) for(let c=pt.minA;c<=pt.maxB;c++){ const i=r*GW+c; if(!grid[i]) continue; g.fillStyle=P.colors[cellCol[i]]; g.fillRect(X(c),Y(r),cw,chh); }
+  // grid lines, bold every 10 from the bottom-right
+  for(let c=0;c<=cols;c++){ const k=cols-c; g.strokeStyle=k%10===0?fg:line; g.lineWidth=k%10===0?1.2:0.6; g.beginPath(); g.moveTo(L+c*cw+.5,T0); g.lineTo(L+c*cw+.5,T0+rows*chh); g.stroke(); }
+  for(let r=0;r<=rows;r++){ const k=rows-r; g.strokeStyle=k%10===0?fg:line; g.lineWidth=k%10===0?1.2:0.6; g.beginPath(); g.moveTo(L,T0+r*chh+.5); g.lineTo(L+cols*cw,T0+r*chh+.5); g.stroke(); }
+  // symbols
+  g.textAlign='center'; g.textBaseline='middle'; g.font='600 11px "IBM Plex Mono", monospace';
+  for(const [key,sym] of pt.marks){ const r=Math.floor(key/GW), c=key%GW; if(r<pt.rb||r>pt.rt) continue;
+    const filled=grid[key], ink=filled?(lum(P.colors[cellCol[key]])>0.55?'#1b1b1b':'#ffffff'):fg; g.fillStyle=ink; g.strokeStyle=ink; g.lineWidth=1.4;
+    const cx=X(c)+cw/2, cy=Y(r)+chh/2;
+    if(sym==='inc') g.fillText('+',cx,cy+0.5);
+    else if(sym==='k2tog'){ g.beginPath(); g.moveTo(cx-4,cy+4); g.lineTo(cx+4,cy-4); g.stroke(); }
+    else if(sym==='ssk'){ g.beginPath(); g.moveTo(cx-4,cy-4); g.lineTo(cx+4,cy+4); g.stroke(); }
+    else if(sym==='bo'){ g.beginPath(); g.arc(cx,cy,2.6,0,Math.PI*2); g.fill(); }
+    else if(sym==='co'){ g.beginPath(); g.arc(cx,cy,3,0,Math.PI*2); g.stroke(); } }
+  // safety eye
+  g.strokeStyle=fg; g.lineWidth=2; g.beginPath(); g.arc(X(pt.eye.c)+cw/2,Y(pt.eye.r)+chh/2,Math.max(cw,chh)*0.55,0,Math.PI*2); g.stroke();
+  // piece numbers on their first row
+  g.font='600 10px "IBM Plex Sans KR", sans-serif';
+  pt.pieces.forEach((pc,i)=>{ const f=chains[i][0], cx=X((f.a+f.b)/2)+cw/2, cy=Y(f.r)+chh/2; g.fillStyle=fg; g.beginPath(); g.arc(cx,cy,7,0,Math.PI*2); g.fill(); g.fillStyle=bg; g.fillText(String(pc.no),cx,cy+0.5); });
+  // row numbers: odd (RS) on the right, even (WS) on the left; columns counted from the right
+  g.font='10px "IBM Plex Mono", monospace'; g.fillStyle=mut;
+  for(let r=pt.rb;r<=pt.rt;r++){ const gr=pt.grNum(r), y=Y(r)+chh/2; if(gr%2) { g.textAlign='left'; g.fillText(gr,L+cols*cw+5,y); } else { g.textAlign='right'; g.fillText(gr,L-5,y); } }
+  g.textAlign='center'; for(let c=pt.minA;c<=pt.maxB;c++){ const n=pt.colNum(c); if(n===1||n%5===0) g.fillText(n,X(c)+cw/2,T0+rows*chh+12); }
+}
+function patternText(){
+  const pt=PAT, m=MATS[P.mat]; const L=[];
+  L.push(`${P.name} 물고기 뜨개 인형 도안`, `완성 크기 약 ${pt.widthCm.toFixed(0)}×${pt.heightCm.toFixed(0)} cm (솜 넣기 전 판 크기)`,
+    `게이지 메리야스 20코 × ${Math.round(20/LOOP_H)}단 = 10 cm · 바늘 4~4.5 mm · 실 ${m.yarnName}`,
+    `실 A ${CNAME[0]} ${P.colors[0]} 약 ${pt.meters[0]} m / B ${CNAME[1]} ${P.colors[1]} 약 ${pt.meters[1]} m / C ${CNAME[2]} ${P.colors[2]} 약 ${pt.meters[2]} m (앞·뒤판과 꿰매기 실 포함)`,
+    `안전눈 ${pt.eye.mm} mm 2개 · 솜 · 돗바늘 · 홀더(쉼코 핀)`, '',
+    '읽는 법: 차트는 오른쪽 아래에서 시작. 홀수 단은 겉면(오른쪽→왼쪽, 겉뜨기), 짝수 단은 안면(왼쪽→오른쪽, 안뜨기). 색이 바뀌는 곳은 인타샤: 색 구역마다 실을 따로 쓰고, 바꿀 때 두 실을 한 번 꼬아 구멍을 막습니다.',
+    '앞판과 뒤판을 같은 도안으로 2장 뜹니다. 뒤판은 뒤집어 맞대면 좌우가 반대로 보입니다.', '');
+  for(const pc of pt.pieces){ L.push(`[조각 ${pc.no}] ${pc.from}~${pc.to}단 · 한 단 최대 색 구역 ${pc.bobbins}개`, pc.start);
+    for(const r of pc.rows){ const parts=[]; if(r.sT) parts.push('시작: '+r.sT);
+      parts.push((r.rs?'겉뜨기 ':'안뜨기 ')+r.runs.map(x=>CL[x.c]+x.n).join(' ')); if(r.eT) parts.push('끝: '+r.eT);
+      L.push(`${r.gr}단 (${r.rs?'겉':'안'}, ${r.n}코): ${parts.join(' · ')}`); }
+    L.push(pc.end,''); }
+  L.push('마무리', `1. 실 끝을 정리하고 두 판을 가볍게 스팀 블로킹합니다.`, `2. 앞판 ${pt.eye.gr}단, 오른쪽에서 ${pt.eye.col}번째 코에 안전눈을 끼우고, 뒤판은 같은 자리를 뒤집은 위치(왼쪽에서 ${pt.eye.col}번째)에 끼웁니다.`,
+    `3. 두 판의 안면끼리 맞대고 C색 실로 가장자리를 감침질합니다. 배 아래쪽 4~5 cm는 남겨 둡니다.`, `4. 솜을 꼬리와 지느러미부터 조금씩 채운 뒤 몸통을 단단히 채웁니다.`, `5. 남은 곳을 감침질로 닫고 실을 인형 안쪽으로 숨깁니다.`);
+  return L.join('\n');
+}
+function renderPattern(){
+  PAT=computePattern(); const pt=PAT, m=MATS[P.mat], box=el('pattern'), esc=s=>String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+  const sw=i=>`<span class="sw" style="background:${P.colors[i]}"></span>`;
+  const tot=pt.stitches.reduce((a,b)=>a+b,0);
+  box.innerHTML=`<div class="ptop"><h2 class="pt">${esc(P.name)} 물고기 뜨개 인형 도안</h2><div class="btns"><button id="pCopy">글 도안 복사</button><button class="primary" id="pClose">3D로 돌아가기</button></div></div>
+  <div class="pmeta">
+    <div><b>완성 크기</b>약 ${pt.widthCm.toFixed(0)} × ${pt.heightCm.toFixed(0)} cm<br>판 1장 ${tot}코 · ${pt.rowsTot}단 · 조각 ${pt.pieces.length}개</div>
+    <div><b>게이지</b>메리야스 20코 × ${Math.round(20/LOOP_H)}단 = 10 cm<br>바늘 4~4.5 mm</div>
+    <div><b>실 (${esc(m.name)})</b>${esc(m.yarnName)}<br>${sw(0)}A ${CNAME[0]} ${pt.meters[0]} m ${sw(1)}B ${CNAME[1]} ${pt.meters[1]} m ${sw(2)}C ${CNAME[2]} ${pt.meters[2]} m</div>
+    <div><b>부자재</b>안전눈 ${pt.eye.mm} mm 2개 · 솜 · 돗바늘 · 홀더(쉼코 핀)</div>
+  </div>
+  <p>${pt.issues.length?`<span class="badge warn">확인 필요 ${pt.issues.length}곳</span> ${pt.issues.map(esc).join(' ')}`:`<span class="badge">모든 단의 늘림·줄임이 뜰 수 있는 방식으로 맞춰졌습니다</span>`}</p>
+  <h3>차트 (앞판·뒤판 같은 도안으로 2장)</h3>
+  <div class="chartwrap"><canvas id="pChart" aria-label="뜨개 차트"></canvas></div>
+  <div class="legend">
+    <span><i style="background:${P.colors[0]}"></i>A ${CNAME[0]}</span><span><i style="background:${P.colors[1]}"></i>B ${CNAME[1]}</span><span><i style="background:${P.colors[2]}"></i>C ${CNAME[2]}</span>
+    <span><i>+</i>늘림</span><span><i>╱</i>왼코 겹치기 k2tog / p2tog</span><span><i>╲</i>오른코 겹치기 ssk / ssp</span><span><i>●</i>코막음</span><span><i>○</i>감아코로 잇기</span><span><i>①</i>조각 시작</span><span><i>◯</i>안전눈 자리</span>
+  </div>
+  <p class="note" style="margin-top:8px">오른쪽 아래에서 시작합니다. 홀수 단(오른쪽 번호)은 겉면에서 오른쪽→왼쪽으로 겉뜨기, 짝수 단(왼쪽 번호)은 안면에서 왼쪽→오른쪽으로 안뜨기. 칸 하나가 한 코이고, 굵은 선은 10코·10단마다 있습니다. 색이 바뀌는 곳은 인타샤로 뜹니다: 색 구역마다 실을 따로 쓰고, 색을 바꿀 때 두 실을 한 번 꼬아 구멍이 생기지 않게 합니다.</p>
+  <h3>단별 설명</h3>
+  ${pt.pieces.map(pc=>`<div class="piece"><h4>조각 ${pc.no} · ${pc.from}~${pc.to}단 · 한 단 최대 색 구역 ${pc.bobbins}개</h4><p>${esc(pc.start)}</p>
+    <ul class="rows">${pc.rows.map(r=>`<li><b>${r.gr}단 ${r.rs?'겉':'안'} · ${r.n}코</b><span>${r.sT?`<span class="sh">시작: ${esc(r.sT)}</span> · `:''}${r.rs?'겉뜨기':'안뜨기'} ${r.runs.map(x=>`${sw(x.c)}${CL[x.c]}${x.n}`).join(' ')}${r.eT?` · <span class="sh">끝: ${esc(r.eT)}</span>`:''}</span></li>`).join('')}</ul>
+    <p>${esc(pc.end)}</p></div>`).join('')}
+  <h3>마무리와 조립</h3>
+  <ol class="steps">
+    <li>실 끝을 같은 색 구역 안쪽으로 정리하고, 두 판을 가볍게 스팀 블로킹합니다.</li>
+    <li>앞판 ${pt.eye.gr}단, 오른쪽에서 ${pt.eye.col}번째 코에 안전눈을 끼웁니다. 뒤판은 맞댔을 때 같은 자리가 되도록 왼쪽에서 ${pt.eye.col}번째 코에 끼웁니다. 솜을 넣기 전에 해야 와셔를 잠글 수 있습니다.</li>
+    <li>두 판의 안면끼리 맞대고 C색(${CNAME[2]}) 실로 가장자리를 감침질합니다. 배 아래쪽 4~5 cm는 남겨 둡니다.</li>
+    <li>솜을 꼬리와 지느러미부터 조금씩 채우고, 몸통은 단단하게 채워 모양을 잡습니다.</li>
+    <li>남은 곳을 감침질로 닫고, 실 끝을 인형 안쪽으로 숨겨 마무리합니다.</li>
+  </ol>`;
+  drawPatternChart(el('pChart'));
+  el('pClose').addEventListener('click',()=>{ box.hidden=true; });
+  el('pCopy').addEventListener('click',()=>{ const t=patternText(), b=el('pCopy');
+    const fallback=()=>{ const ta=document.createElement('textarea'); ta.value=t; ta.style.width='100%'; ta.rows=12; box.insertBefore(ta, box.children[1]); ta.focus(); ta.select(); b.textContent='아래 글을 선택해 복사하세요'; };
+    try{ navigator.clipboard.writeText(t).then(()=>{ b.textContent='복사했어요'; setTimeout(()=>b.textContent='글 도안 복사',1800); }, fallback); }catch(e){ fallback(); } });
+}
+
+/* ---------- UI ---------- */
+function setPalette(){ const h=str_to_seed(P.name)>>>0; const k=h%PALETTES.length; P.colors=PALETTES[k].slice(); P.paletteName=PALETTE_NAMES[k];
+  ['c0','c1','c2'].forEach((id,i)=>el(id).value=P.colors[i]); }
+function make(name){
+  P.name=(name||'').trim()||'이름 없는 물고기'; el('name').value=P.name; el('hName').textContent=P.name; el('capName').textContent=P.name;
+  fishData=makeFishData(P.name); drawFishSvg(); setPalette();
+  const a=fishData.params; el('capInfo').textContent=`몸길이 ${Math.round(a.body_length)} · 비늘형 ${a.scale_type} · 꼬리형 ${a.tail_type} · ${P.paletteName}`;
+  rebuild(); initState(0,false); P.playing=true; frame();
+}
+function rebuild(){ buildGrid(); buildPath(); buildSeam(); }
+const fmt={ fur:v=>(+v).toFixed(2), dens:v=>v, droop:v=>(+v).toFixed(2), yarn:v=>(+v).toFixed(3), stitches:v=>v, puff:v=>(+v).toFixed(2),
+  sheen:v=>(+v).toFixed(2), lumpy:v=>(+v).toFixed(3), caustic:v=>(+v).toFixed(2),
+  tension:v=>(+v).toFixed(2), gravity:v=>v, wind:v=>v, speed:v=>v+'코/s' };
+for(const k of Object.keys(fmt)){ const inp=el(k), o=el('o'+k[0].toUpperCase()+k.slice(1)); inp.value=P[k]; o.textContent=fmt[k](P[k]);
+  inp.addEventListener('input',()=>{ P[k]=+inp.value; o.textContent=fmt[k](inp.value);
+    if(k==='fur') furUniforms.uLen.value=P.fur; if(k==='dens') furUniforms.uDens.value=P.dens; if(k==='droop') furUniforms.uDroop.value=P.droop;
+    if(k==='sheen') furUniforms.uSheen.value=P.sheen; if(k==='lumpy') furUniforms.uLumpy.value=P.lumpy;
+    if(k==='caustic' && P.env==='sea') causticU.uCaustic.value=P.caustic; if(k==='yarn') { buildSeam(); showSeam(); }
+    if(k==='stitches') scheduleRebuild();
+    if(k==='puff'){ recomputeInfl(); updateTargets(); } }); }
+let rbT=0; function scheduleRebuild(){ clearTimeout(rbT); rbT=setTimeout(()=>{ const f=p/(N-1), fin=stage.phase==='done'; rebuild(); initState(fin?N-1:f*(N-1),fin); frame(); },160); }
+['c0','c1','c2'].forEach((id,i)=>el(id).addEventListener('input',e=>{ P.colors[i]=e.target.value; paintColors(); paintSeam(); if(!el('pattern').hidden) renderPattern(); }));
+function setMat(k){ const m=MATS[k]; P.mat=k; for(const f of ['fur','dens','droop','yarn','sheen','lumpy']){ P[f]=m[f]; el(f).value=m[f]; el('o'+f[0].toUpperCase()+f.slice(1)).textContent=fmt[f](m[f]); }
+  P.thin=m.thin; furUniforms.uLen.value=P.fur; furUniforms.uDens.value=P.dens; furUniforms.uDroop.value=P.droop;
+  furUniforms.uSheen.value=P.sheen; furUniforms.uLumpy.value=P.lumpy; furUniforms.uThin.value=P.thin; if(grid){ buildSeam(); showSeam(); }
+  for(const b of el('matChips').children) b.setAttribute('aria-pressed', b.dataset.v===k); if(!el('pattern').hidden) renderPattern(); }
+el('matChips').addEventListener('click',e=>{ const b=e.target.closest('button'); if(b) setMat(b.dataset.v); });
+el('envChips').addEventListener('click',e=>{ const b=e.target.closest('button'); if(b) setEnv(b.dataset.v); });
+let follow=true; controls.addEventListener('start',()=>{ follow=false; });
+controls.minDistance=1.2; controls.maxDistance=280;
+function dolly(f){ follow=false; const v=camera.position.clone().sub(controls.target).multiplyScalar(f);
+  v.setLength(THREE.MathUtils.clamp(v.length(),controls.minDistance,controls.maxDistance)); camera.position.copy(controls.target).add(v); }
+el('zIn').addEventListener('click',()=>dolly(0.65)); el('zOut').addEventListener('click',()=>dolly(1.5));
+el('zFit').addEventListener('click',()=>frame());
+el('zClose').addEventListener('click',()=>{ // look closely at the body where the stuffing is deepest
+  let bi=0; for(let i=0;i<GW*GH;i++) if(dist[i]>dist[bi]) bi=i; const r=Math.floor(bi/GW), c=bi%GW;
+  const x=c+0.5-GW/2, y=LOOP_H*r, z=0.12+stage.puff*infl(x,y)+0.3;
+  follow=false; P.autoRotate=false; el('autoRotate').checked=false; controls.target.set(x,y,z); camera.position.set(x+3.6,y+2.6,z+11); controls.update(); });
+el('bPattern').addEventListener('click',()=>{ el('pattern').hidden=false; renderPattern(); el('pattern').scrollTop=0; });
+el('bPalette').addEventListener('click',()=>{ setPalette(); paintColors(); paintSeam(); });
+el('bMake').addEventListener('click',()=>make(el('name').value));
+el('name').addEventListener('keydown',e=>{ if(e.key==='Enter') make(el('name').value); });
+el('bRandom').addEventListener('click',()=>make(fd_randomName()));
+el('bPlay').addEventListener('click',()=>{ P.playing=!P.playing; hud(); });
+el('bSkip').addEventListener('click',()=>{ initState(N-1,true); P.playing=true; frame(); hud(); });
+el('bRestart').addEventListener('click',()=>{ initState(0,false); P.playing=true; frame(); hud(); });
+el('progress').addEventListener('input',e=>{ initState(e.target.value/1000*(N-1),false); });
+el('autoRotate').addEventListener('change',e=>{ P.autoRotate=e.target.checked; });
+el('bSheet').addEventListener('click',()=>{ const pn=el('panel'); pn.classList.toggle('collapsed'); el('bSheet').textContent=pn.classList.contains('collapsed')?'설정 펼치기':'설정 접기'; });
+if(matchMedia('(max-width:820px)').matches) el('panel').classList.add('collapsed');
+function resize(){ const r=canvas.parentElement.getBoundingClientRect(); renderer.setSize(r.width,r.height,false); camera.aspect=r.width/Math.max(1,r.height); camera.updateProjectionMatrix(); }
+new ResizeObserver(resize).observe(canvas.parentElement);
+
+/* ---------- start partway through the front panel ---------- */
+setEnv('sea'); setMat('fur'); make('준우'); initState(NF*0.55,false); frame(); applyTheme(); resize(); hud();
+let last=performance.now(), hT=0;
+function loop(now){ const dt=Math.min(0.033,(now-last)/1000); last=now;
+  const E=step(dt); updateTube(E); showSeam(); props(dt); furUniforms.uTime.value=time; causticU.uCTime.value=time*0.9; animateSea(dt);
+  hT+=dt; if(hT>0.15){ hud(); hT=0; }
+  controls.update(); renderer.render(scene,camera); requestAnimationFrame(loop); }
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
